@@ -1,0 +1,27 @@
+---
+components:
+  - id: clickhouse
+    name: ClickHouse
+    description: ClickHouse is a fast open-source column-oriented DBMS for real-time analytical reporting, used for high-volume logs, metrics, and distributed tracing.
+    link: https://clickhouse.com/
+    github:
+      - ClickHouse/ClickHouse
+    twitter: ClickHouseDB
+    logo: questdb
+    license:
+      - Apache License 2.0
+    categories:
+      - storage
+    capabilities:
+      aspects:
+        - metrics
+        - logs
+        - tracing
+    connections:
+      dataFrom:
+        - opentelemetry-collector
+        - fluentbit
+        - fluentd
+        - kafka
+      dataTo:
+        - grafana

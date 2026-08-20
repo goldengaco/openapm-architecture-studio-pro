@@ -3,7 +3,9 @@
   "version": "1.0.0",
   "description": "Model for the Open APM landscape website.",
   "scripts": {
-    "build": "node src/build.js"
+    "build": "node src/build.js",
+    "start": "node server.js",
+    "dev": "node src/build.js && node server.js"
   },
   "repository": {
     "type": "git",

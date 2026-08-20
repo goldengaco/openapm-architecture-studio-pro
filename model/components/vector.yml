@@ -1,0 +1,30 @@
+---
+components:
+  - id: vector
+    name: Vector
+    description: A high-performance observability data pipeline built in Rust for collecting, transforming, and routing all of your logs and metrics.
+    link: https://vector.dev/
+    github:
+      - vectordotdev/vector
+    twitter: vectordotdev
+    logo: netflix-vector
+    license:
+      - Mozilla Public License 1.1
+    categories:
+      - collector
+      - data-processing
+    capabilities:
+      aspects:
+        - logs
+        - metrics
+    connections:
+      dataFrom:
+        - fluentbit
+        - rsyslog
+        - kafka
+      dataTo:
+        - clickhouse
+        - elasticsearch
+        - loki
+        - prometheus-server
+        - opensearch

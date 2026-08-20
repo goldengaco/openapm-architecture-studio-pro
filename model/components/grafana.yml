@@ -28,6 +28,13 @@ components:
         - victoriametrics
         - appdynamics-collector
         - tdengine
+        - clickhouse
+        - tempo
+        - loki
+        - grafana-mimir
+        - opensearch
+        - pyroscope
+        - parca
 
   # Metrictank
   - id: metrictank

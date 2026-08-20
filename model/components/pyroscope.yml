@@ -1,0 +1,24 @@
+---
+components:
+  - id: pyroscope
+    name: Grafana Pyroscope
+    description: Open source continuous profiling platform for performance analysis and memory / CPU leak debugging.
+    link: https://grafana.com/oss/pyroscope/
+    github:
+      - grafana/pyroscope
+    twitter: pyroscopeio
+    logo: grafana
+    license:
+      - GNU AGPLv3
+    categories:
+      - storage
+      - visualization
+    capabilities:
+      aspects:
+        - profiling
+    connections:
+      dataFrom:
+        - grafana-alloy
+        - opentelemetry-collector
+      dataTo:
+        - grafana

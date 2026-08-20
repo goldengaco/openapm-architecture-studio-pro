@@ -1,0 +1,25 @@
+---
+components:
+  - id: grafana-mimir
+    name: Grafana Mimir
+    description: Open source, horizontally scalable, highly available, multi-tenant long-term storage for Prometheus metrics. Scale to 1 billion+ active series.
+    link: https://grafana.com/oss/mimir/
+    github:
+      - grafana/mimir
+    twitter: grafana
+    logo: grafana
+    license:
+      - GNU AGPLv3
+    categories:
+      - storage
+    capabilities:
+      aspects:
+        - metrics
+    connections:
+      dataFrom:
+        - prometheus-server
+        - opentelemetry-collector
+        - grafana-alloy
+        - vector
+      dataTo:
+        - grafana

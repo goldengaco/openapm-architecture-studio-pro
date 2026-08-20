@@ -1,0 +1,22 @@
+---
+components:
+  - id: parca
+    name: Parca
+    description: Continuous profiling for applications and infrastructure using eBPF with zero overhead and deep kernel insight.
+    link: https://www.parca.dev/
+    github:
+      - parca-dev/parca
+    twitter: ParcaDev
+    logo: inspectit
+    license:
+      - Apache License 2.0
+    categories:
+      - agent
+      - storage
+      - visualization
+    capabilities:
+      aspects:
+        - profiling
+    connections:
+      dataTo:
+        - grafana

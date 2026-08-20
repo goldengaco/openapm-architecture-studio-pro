@@ -1,0 +1,29 @@
+---
+components:
+  - id: uptrace
+    name: Uptrace
+    description: Open source APM and distributed tracing tool that uses OpenTelemetry to collect data and ClickHouse for storage.
+    link: https://uptrace.dev/
+    github:
+      - uptrace/uptrace
+    twitter: uptrace_dev
+    logo: inspectit
+    license:
+      - GNU AGPLv3
+    categories:
+      - visualization
+      - dashboarding
+      - alerting
+    capabilities:
+      aspects:
+        - metrics
+        - tracing
+        - logs
+        - alerts
+    connections:
+      dataFrom:
+        - opentelemetry
+        - opentelemetry-collector
+        - clickhouse
+      dataTo:
+        - clickhouse

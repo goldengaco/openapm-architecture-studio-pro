@@ -1,0 +1,26 @@
+---
+components:
+  - id: opensearch
+    name: OpenSearch
+    description: An open source distributed search and analytics suite derived from Elasticsearch, widely used for log analytics and observability.
+    link: https://opensearch.org/
+    github:
+      - opensearch-project/OpenSearch
+    twitter: OpenSearchProj
+    logo: elastic
+    license:
+      - Apache License 2.0
+    categories:
+      - storage
+    capabilities:
+      aspects:
+        - logs
+        - tracing
+    connections:
+      dataFrom:
+        - fluentbit
+        - fluentd
+        - vector
+        - opentelemetry-collector
+      dataTo:
+        - grafana

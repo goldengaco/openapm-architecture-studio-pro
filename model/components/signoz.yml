@@ -1,0 +1,30 @@
+---
+components:
+  - id: signoz
+    name: SigNoz
+    description: Open-source APM & Observability platform native to OpenTelemetry and powered by ClickHouse for ultra-fast queries on metrics, traces and logs.
+    link: https://signoz.io/
+    github:
+      - SigNoz/signoz
+    twitter: SigNozHQ
+    logo: inspectit
+    license:
+      - Apache License 2.0
+    categories:
+      - visualization
+      - dashboarding
+      - collector
+      - alerting
+    capabilities:
+      aspects:
+        - metrics
+        - tracing
+        - logs
+        - alerts
+    connections:
+      dataFrom:
+        - opentelemetry
+        - opentelemetry-collector
+        - clickhouse
+      dataTo:
+        - clickhouse

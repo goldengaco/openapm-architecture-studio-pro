@@ -1,0 +1,32 @@
+---
+components:
+  - id: grafana-alloy
+    name: Grafana Alloy
+    description: Grafana's open source OpenTelemetry Collector distribution. Delivers native OTel support with Prometheus, Pyroscope and Grafana ecosystem integrations.
+    link: https://grafana.com/oss/alloy/
+    github:
+      - grafana/alloy
+    twitter: grafana
+    logo: grafana
+    license:
+      - Apache License 2.0
+    categories:
+      - collector
+      - agent
+    capabilities:
+      aspects:
+        - metrics
+        - logs
+        - tracing
+    connections:
+      dataFrom:
+        - opentelemetry
+        - promtail
+        - fluentbit
+      dataTo:
+        - grafana-mimir
+        - loki
+        - tempo
+        - prometheus-server
+        - pyroscope
+        - grafana

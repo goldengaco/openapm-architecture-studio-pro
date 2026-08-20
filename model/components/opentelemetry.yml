@@ -101,6 +101,11 @@ components:
         - kafka
         - loki
         - cortex
+        - tempo
+        - clickhouse
+        - grafana-mimir
+        - opensearch
+        - pyroscope
       dataFrom:
         - collectd
         - kafka
@@ -109,4 +114,5 @@ components:
         - redis
         - rsyslog
         - opencensus
+        - cilium
 

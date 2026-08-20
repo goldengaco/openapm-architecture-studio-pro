@@ -1,0 +1,24 @@
+---
+components:
+  - id: glitchtip
+    name: GlitchTip
+    description: An open-source, Sentry-compatible error tracking and application performance monitoring tool.
+    link: https://glitchtip.com/
+    github:
+      - glitchtip/glitchtip
+    twitter: glitchtip
+    logo: sentry
+    license:
+      - MIT License
+    categories:
+      - dashboarding
+      - alerting
+      - storage
+    capabilities:
+      aspects:
+        - logs
+        - alerts
+    connections:
+      dataFrom:
+        - sentry
+        - opentelemetry

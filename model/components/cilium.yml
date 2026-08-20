@@ -1,0 +1,25 @@
+---
+components:
+  - id: cilium
+    name: Cilium / Tetragon
+    description: eBPF-powered networking, observability, and security for Kubernetes and cloud native environments.
+    link: https://cilium.io/
+    github:
+      - cilium/cilium
+    twitter: ciliumproject
+    logo: inspectit
+    license:
+      - Apache License 2.0
+    categories:
+      - agent
+      - collector
+    capabilities:
+      aspects:
+        - metrics
+        - logs
+    connections:
+      dataTo:
+        - prometheus-server
+        - grafana
+        - grafana-mimir
+        - loki
