@@ -799,23 +799,71 @@ ESTRUCTURA DE EVALUACIÓN (6 PILARES):
             ]
         },
         'azure-media-ha': {
-            cost: '$55.00 / mes',
+            cost: '$45.00 - $85.00 / mes (Active-Passive HA)',
             zones: [
-                { id: 'z_az_east', title: 'Azure Region: East US (VNet 10.0.0.0/16)', type: 'azure', x: 40, y: 90, width: 580, height: 400 },
-                { id: 'z_az_west', title: 'Standby Region: West US (Failover)', type: 'azure', x: 680, y: 90, width: 340, height: 400 }
+                { id: 'z_az_east', title: '1. Primary Region: East US (VNet 10.0.0.0/16)', type: 'azure', x: 40, y: 70, width: 730, height: 600 },
+                { id: 'z_az_west', title: '2. Standby Region: West US (Failover)', type: 'azure', x: 810, y: 70, width: 330, height: 600 }
             ],
             nodes: [
                 { componentId: 'azure-frontdoor', x: 70, y: 150 },
-                { componentId: 'azure-functions', x: 350, y: 150 },
-                { componentId: 'azure-cosmos', x: 350, y: 300 },
-                { componentId: 'azure-blob', x: 710, y: 150 },
-                { componentId: 'azure-cosmos', x: 710, y: 300 }
+                { componentId: 'azure-functions', x: 430, y: 150 },
+                { componentId: 'azure-blob', x: 70, y: 320 },
+                { componentId: 'azure-cosmos', x: 430, y: 320 },
+                { componentId: 'azure-blob', x: 430, y: 490 },
+                { componentId: 'azure-blob', x: 840, y: 220 },
+                { componentId: 'azure-cosmos', x: 840, y: 400 }
             ],
             connections: [
-                { from: 0, to: 1, label: 'HTTPS Routing' },
-                { from: 1, to: 2, label: 'Cosmos Write' },
-                { from: 2, to: 4, label: 'Geo-Replication' },
-                { from: 1, to: 3, label: 'Blob GRS' }
+                { from: 0, to: 1, label: 'HTTPS API' },
+                { from: 0, to: 2, label: 'Origin HLS/DASH' },
+                { from: 1, to: 3, label: 'Write Metadata' },
+                { from: 1, to: 4, label: 'Read Stream' },
+                { from: 4, to: 5, label: 'Geo-Replication (GRS)' },
+                { from: 3, to: 6, label: 'Global Replication' }
+            ],
+            notes: [
+                { id: 'note_az_1', text: '🎬 **Azure High Availability Video Streaming**: Front Door distribuye tráfico global. La región Este procesa video y metadatos con replicación activa-pasiva automática hacia la región Oeste para RTO < 1 minuto.', color: 'blue', x: 40, y: 690, width: 1100, height: 95 }
+            ],
+            markers: [
+                { id: 'mark_az_1', num: '1', text: 'Ingress & Front Door', x: 100, y: 40 },
+                { id: 'mark_az_2', num: '2', text: 'Transcoding & App', x: 460, y: 40 },
+                { id: 'mark_az_3', num: '3', text: 'Standby Failover', x: 870, y: 40 }
+            ]
+        },
+        'enterprise-hybrid-vendor-pci': {
+            cost: '$0.00 On-Prem / Cloud PayG',
+            zones: [
+                { id: 'z_ent_onprem', title: '1. On-Premise Enterprise & ERP (Local DC)', type: 'onprem', x: 40, y: 70, width: 340, height: 580 },
+                { id: 'z_ent_cloud', title: '2. Cloud Account VPC (Core Application)', type: 'aws', x: 420, y: 70, width: 340, height: 580 },
+                { id: 'z_ent_external', title: '3. External SaaS & Vendor Systems', type: 'zerocost', x: 800, y: 70, width: 340, height: 580 }
+            ],
+            nodes: [
+                { componentId: 'traefik', x: 70, y: 140 },
+                { componentId: 'kafka', x: 70, y: 290 },
+                { componentId: 'postgresql-onprem', x: 70, y: 440 },
+                { componentId: 'aws-alb', x: 450, y: 140 },
+                { componentId: 'aws-fargate', x: 450, y: 290 },
+                { componentId: 'aws-aurora', x: 450, y: 440 },
+                { componentId: 'cloudflare-dns', x: 830, y: 140 },
+                { componentId: 'cloudflare-workers', x: 830, y: 290 },
+                { componentId: 'minio', x: 830, y: 440 }
+            ],
+            connections: [
+                { from: 0, to: 1, label: 'Publish Event' },
+                { from: 1, to: 4, label: 'MirrorMaker Sync' },
+                { from: 3, to: 4, label: 'Target Group' },
+                { from: 4, to: 5, label: 'Postgres SQL' },
+                { from: 6, to: 7, label: 'Webhook Ingress' },
+                { from: 7, to: 3, label: 'Stripe Webhook' },
+                { from: 7, to: 8, label: 'Invoice Vault S3' }
+            ],
+            notes: [
+                { id: 'note_ent_1', text: '🏢 **Enterprise Multi-Boundary Pattern**: Aislamiento estricto entre sistemas locales (ERP/SAP), Cómputo Cloud (Fargate) y Pasarelas de Pago Externas (Stripe) cumpliendo normativas PCI-DSS e ISO 27001.', color: 'green', x: 40, y: 670, width: 1100, height: 95 }
+            ],
+            markers: [
+                { id: 'mark_ent_1', num: '1', text: 'On-Prem Core', x: 120, y: 40 },
+                { id: 'mark_ent_2', num: '2', text: 'Cloud Compute', x: 500, y: 40 },
+                { id: 'mark_ent_3', num: '3', text: 'External Vendors', x: 880, y: 40 }
             ]
         },
         'onprem-highperf': {
