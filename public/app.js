@@ -2048,15 +2048,23 @@ ESTRUCTURA DE EVALUACIÓN (6 PILARES):
     }
 
     // -------------------------------------------------------------
-    // AI COPILOT ENGINE (GEMINI, OLLAMA LOCAL & MASTER PROMPT)
+    // AI COPILOT ENGINE (GEMINI, GROQ, OPENROUTER, OLLAMA & MASTER PROMPT)
     // -------------------------------------------------------------
     function setupAICopilot() {
         const aiModal = document.getElementById('ai-modal');
-        const keyInput = document.getElementById('gemini-api-key-input');
+        const geminiKeyInput = document.getElementById('gemini-api-key-input');
+        const groqKeyInput = document.getElementById('groq-api-key-input');
+        const groqModelSelect = document.getElementById('groq-model-select');
+        const openrouterKeyInput = document.getElementById('openrouter-api-key-input');
+        const openrouterModelSelect = document.getElementById('openrouter-model-select');
         const ollamaEndpointInput = document.getElementById('ollama-endpoint-input');
         const ollamaModelInput = document.getElementById('ollama-model-input');
 
-        keyInput.value = safeStorage.get('gemini_api_key', '');
+        if (geminiKeyInput) geminiKeyInput.value = safeStorage.get('gemini_api_key', '');
+        if (groqKeyInput) groqKeyInput.value = safeStorage.get('groq_api_key', '');
+        if (groqModelSelect) groqModelSelect.value = safeStorage.get('groq_model', 'llama-3.3-70b-versatile');
+        if (openrouterKeyInput) openrouterKeyInput.value = safeStorage.get('openrouter_api_key', '');
+        if (openrouterModelSelect) openrouterModelSelect.value = safeStorage.get('openrouter_model', 'google/gemini-2.0-flash-exp:free');
         if (ollamaEndpointInput) ollamaEndpointInput.value = safeStorage.get('ollama_endpoint', 'http://localhost:11434');
         if (ollamaModelInput) ollamaModelInput.value = safeStorage.get('ollama_model', 'llama3.3');
 
@@ -2080,8 +2088,13 @@ ESTRUCTURA DE EVALUACIÓN (6 PILARES):
                 currentAIProvider = tab.getAttribute('data-ai-provider');
 
                 const gBox = document.getElementById('ai-provider-gemini-box');
+                const grqBox = document.getElementById('ai-provider-groq-box');
+                const orBox = document.getElementById('ai-provider-openrouter-box');
                 const oBox = document.getElementById('ai-provider-ollama-box');
+
                 if (gBox) gBox.style.display = currentAIProvider === 'gemini' ? 'block' : 'none';
+                if (grqBox) grqBox.style.display = currentAIProvider === 'groq' ? 'block' : 'none';
+                if (orBox) orBox.style.display = currentAIProvider === 'openrouter' ? 'block' : 'none';
                 if (oBox) oBox.style.display = currentAIProvider === 'ollama' ? 'block' : 'none';
             });
         });
@@ -2095,7 +2108,7 @@ ESTRUCTURA DE EVALUACIÓN (6 PILARES):
         });
 
         document.getElementById('btn-save-gemini-key').addEventListener('click', () => {
-            const k = keyInput.value.trim();
+            const k = geminiKeyInput.value.trim();
             if (k) {
                 safeStorage.set('gemini_api_key', k);
                 alert('¡Clave de Google AI Studio guardada localmente!');
@@ -2104,6 +2117,38 @@ ESTRUCTURA DE EVALUACIÓN (6 PILARES):
                 alert('Clave eliminada. Se usará Modo Heurístico $0 Offline.');
             }
         });
+
+        const btnSaveGroq = document.getElementById('btn-save-groq-key');
+        if (btnSaveGroq) {
+            btnSaveGroq.addEventListener('click', () => {
+                const k = groqKeyInput.value.trim();
+                const m = groqModelSelect.value;
+                if (k) {
+                    safeStorage.set('groq_api_key', k);
+                    safeStorage.set('groq_model', m);
+                    alert('¡Clave de Groq Cloud guardada localmente!');
+                } else {
+                    safeStorage.remove('groq_api_key');
+                    alert('Clave de Groq eliminada.');
+                }
+            });
+        }
+
+        const btnSaveOpenRouter = document.getElementById('btn-save-openrouter-key');
+        if (btnSaveOpenRouter) {
+            btnSaveOpenRouter.addEventListener('click', () => {
+                const k = openrouterKeyInput.value.trim();
+                const m = openrouterModelSelect.value;
+                if (k) {
+                    safeStorage.set('openrouter_api_key', k);
+                    safeStorage.set('openrouter_model', m);
+                    alert('¡Clave de OpenRouter guardada localmente!');
+                } else {
+                    safeStorage.remove('openrouter_api_key');
+                    alert('Clave de OpenRouter eliminada.');
+                }
+            });
+        }
 
         const btnSaveOllama = document.getElementById('btn-save-ollama-config');
         if (btnSaveOllama) {
@@ -2144,7 +2189,11 @@ ESTRUCTURA DE EVALUACIÓN (6 PILARES):
         if (btnApply) btnApply.style.display = 'none';
         outContent.textContent = 'Analizando arquitectura con el Master Framework 2026...';
 
-        const apiKey = safeStorage.get('gemini_api_key');
+        const geminiKey = safeStorage.get('gemini_api_key');
+        const groqKey = safeStorage.get('groq_api_key');
+        const groqModel = safeStorage.get('groq_model', 'llama-3.3-70b-versatile');
+        const openrouterKey = safeStorage.get('openrouter_api_key');
+        const openrouterModel = safeStorage.get('openrouter_model', 'google/gemini-2.0-flash-exp:free');
         const ollamaEndpoint = safeStorage.get('ollama_endpoint', 'http://localhost:11434');
         const ollamaModel = safeStorage.get('ollama_model', 'llama3.3');
 
@@ -2164,10 +2213,10 @@ ESTRUCTURA DE EVALUACIÓN (6 PILARES):
             : `${MASTER_MEGA_PROMPT}\n\nANALIZA LOS COSTOS, FINOPS Y ON-PREMISE VIABILITY DE ESTA ARQUITECTURA:\n${JSON.stringify(architectureSummary, null, 2)}\n\nCalcula: 1) Unit Economics ($/MAU), 2) Alternativas Zero-Cost ($0.00) y On-Premise (MinIO, Traefik, PostgreSQL, Qdrant, Ollama), 3) TCO de Hardware propio vs Cloud y 4) Ahorro mensual proyectado.`;
 
         // 1. Google Gemini Provider
-        if (currentAIProvider === 'gemini' && apiKey) {
-            modelTag.textContent = 'Gemini 1.5/2.0 Flash (Google AI Studio)';
+        if (currentAIProvider === 'gemini' && geminiKey) {
+            modelTag.textContent = 'Gemini 2.0 / 1.5 Flash (Google AI Studio)';
             try {
-                const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
+                const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiKey}`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ contents: [{ parts: [{ text: promptText }] }] })
@@ -2192,7 +2241,69 @@ ESTRUCTURA DE EVALUACIÓN (6 PILARES):
             }
         }
 
-        // 2. Ollama Local Provider ($0 Offline)
+        // 2. Groq Cloud LPU Provider (Ultra-Fast 500+ t/s)
+        if (currentAIProvider === 'groq' && groqKey) {
+            modelTag.textContent = `Groq LPU: ${groqModel} (500+ t/s)`;
+            try {
+                const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${groqKey}`
+                    },
+                    body: JSON.stringify({
+                        model: groqModel,
+                        messages: [{ role: 'user', content: promptText }]
+                    })
+                });
+                const json = await res.json();
+                if (json.choices && json.choices[0].message.content) {
+                    const text = json.choices[0].message.content;
+                    outTitle.textContent = type === 'audit' ? '⚡ Auditoría Ultrarrápida (Groq LPU)' : '⚡ Optimización FinOps (Groq LPU)';
+                    outContent.textContent = text;
+
+                    const match = text.match(/```json\s*([\s\S]*?)\s*```/);
+                    if (match) {
+                        try {
+                            lastGeneratedAITopology = JSON.parse(match[1]);
+                            if (btnApply) btnApply.style.display = 'inline-flex';
+                        } catch (e) {}
+                    }
+                    return;
+                }
+            } catch (err) {
+                console.warn('Error con Groq API:', err);
+            }
+        }
+
+        // 3. OpenRouter Provider (:free Models)
+        if (currentAIProvider === 'openrouter' && openrouterKey) {
+            modelTag.textContent = `OpenRouter: ${openrouterModel}`;
+            try {
+                const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${openrouterKey}`
+                    },
+                    body: JSON.stringify({
+                        model: openrouterModel,
+                        messages: [{ role: 'user', content: promptText }]
+                    })
+                });
+                const json = await res.json();
+                if (json.choices && json.choices[0].message.content) {
+                    const text = json.choices[0].message.content;
+                    outTitle.textContent = type === 'audit' ? '🌐 Auditoría Multi-LLM (OpenRouter)' : '🌐 Optimización FinOps (OpenRouter)';
+                    outContent.textContent = text;
+                    return;
+                }
+            } catch (err) {
+                console.warn('Error con OpenRouter API:', err);
+            }
+        }
+
+        // 4. Ollama Local Provider ($0 Offline)
         if (currentAIProvider === 'ollama') {
             modelTag.textContent = `Ollama Local: ${ollamaModel} ($0 Offline)`;
             try {
@@ -2212,7 +2323,7 @@ ESTRUCTURA DE EVALUACIÓN (6 PILARES):
             }
         }
 
-        // 3. Offline Heuristic Rule Engine ($0 Fallback)
+        // 5. Offline Heuristic Rule Engine ($0 Fallback)
         modelTag.textContent = 'Motor Heurístico Local ($0 Offline)';
         outTitle.textContent = type === 'audit' ? '🛡️ Auditoría de Resiliencia (Heurística Experta)' : '💡 Optimización FinOps, Zero-Cost & On-Premise (Heurística)';
 

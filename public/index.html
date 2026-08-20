@@ -765,24 +765,68 @@
                 <div class="modal-body">
                     <!-- AI Provider Selector Tabs -->
                     <div class="modal-tabs" id="ai-provider-tabs">
-                        <button class="modal-tab active" data-ai-provider="gemini">Google AI Studio (Gemini Free Tier)</button>
-                        <button class="modal-tab" data-ai-provider="ollama">Ollama Local ($0 Offline LLM)</button>
-                        <button class="modal-tab" data-ai-provider="heuristic">Motor Heurístico Local ($0)</button>
+                        <button class="modal-tab active" data-ai-provider="gemini">Google AI Studio (Gemini)</button>
+                        <button class="modal-tab" data-ai-provider="groq">Groq Cloud (LPU 500+ t/s)</button>
+                        <button class="modal-tab" data-ai-provider="openrouter">OpenRouter (:free Models)</button>
+                        <button class="modal-tab" data-ai-provider="ollama">Ollama Local ($0 Offline)</button>
+                        <button class="modal-tab" data-ai-provider="heuristic">Motor Heurístico ($0)</button>
                     </div>
 
                     <!-- Gemini Config Box -->
                     <div class="ai-config-box" id="ai-provider-gemini-box">
                         <div class="ai-config-header">
                             <strong>🔑 Google AI Studio API Key (Gemini 2.0 / 1.5 Flash)</strong>
-                            <span class="badge-tag">100% Privado en tu Navegador</span>
+                            <span class="badge-tag">15 RPM / 1M Tokens Gratis</span>
                         </div>
                         <div class="ai-input-row">
                             <input type="password" id="gemini-api-key-input" placeholder="Pega tu Google AI Studio API Key...">
                             <button class="action-btn primary-btn" id="btn-save-gemini-key">Guardar Clave</button>
                         </div>
                         <div class="ai-help-links">
-                            <span>Obtén tu clave gratuita (15 RPM / 1M tokens) en:</span>
-                            <a href="https://aistudio.google.com/app/apikey" target="_blank" class="ai-key-link">👉 Google AI Studio (Free Key)</a>
+                            <span>Obtén tu clave gratuita sin tarjeta en:</span>
+                            <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer" class="ai-key-link">👉 Google AI Studio (Free Key)</a>
+                        </div>
+                    </div>
+
+                    <!-- Groq Cloud Config Box -->
+                    <div class="ai-config-box" id="ai-provider-groq-box" style="display: none;">
+                        <div class="ai-config-header">
+                            <strong>⚡ Groq Cloud API Key (Llama 3.3 70B & DeepSeek R1)</strong>
+                            <span class="badge-tag">500+ Tokens/s Ultra-Fast</span>
+                        </div>
+                        <div class="ai-input-row">
+                            <input type="password" id="groq-api-key-input" placeholder="gsk_..." style="max-width: 260px;">
+                            <select id="groq-model-select" style="background: var(--bg-card); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 6px; padding: 0.4rem; font-size: 0.75rem;">
+                                <option value="llama-3.3-70b-versatile">Llama 3.3 70B Versatile</option>
+                                <option value="deepseek-r1-distill-llama-70b">DeepSeek R1 Distill 70B</option>
+                                <option value="mixtral-8x7b-32768">Mixtral 8x7B (32k ctx)</option>
+                            </select>
+                            <button class="action-btn primary-btn" id="btn-save-groq-key">Guardar Clave</button>
+                        </div>
+                        <div class="ai-help-links">
+                            <span>Obtén tu clave gratuita en:</span>
+                            <a href="https://console.groq.com/keys" target="_blank" rel="noopener noreferrer" class="ai-key-link">👉 Groq Console (Free Key)</a>
+                        </div>
+                    </div>
+
+                    <!-- OpenRouter Config Box -->
+                    <div class="ai-config-box" id="ai-provider-openrouter-box" style="display: none;">
+                        <div class="ai-config-header">
+                            <strong>🌐 OpenRouter API Key (Modelos :free)</strong>
+                            <span class="badge-tag">Pasarela Universal Multi-LLM</span>
+                        </div>
+                        <div class="ai-input-row">
+                            <input type="password" id="openrouter-api-key-input" placeholder="sk-or-..." style="max-width: 260px;">
+                            <select id="openrouter-model-select" style="background: var(--bg-card); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 6px; padding: 0.4rem; font-size: 0.75rem;">
+                                <option value="google/gemini-2.0-flash-exp:free">Gemini 2.0 Flash (:free)</option>
+                                <option value="deepseek/deepseek-r1:free">DeepSeek R1 (:free)</option>
+                                <option value="meta-llama/llama-3.3-70b-instruct:free">Llama 3.3 70B (:free)</option>
+                            </select>
+                            <button class="action-btn primary-btn" id="btn-save-openrouter-key">Guardar Clave</button>
+                        </div>
+                        <div class="ai-help-links">
+                            <span>Obtén tu clave gratuita en:</span>
+                            <a href="https://openrouter.ai/keys" target="_blank" rel="noopener noreferrer" class="ai-key-link">👉 OpenRouter Keys (Free Models)</a>
                         </div>
                     </div>
 
