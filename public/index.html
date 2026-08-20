@@ -55,6 +55,10 @@
                     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
                     💸 Guía Zero-Cost 2026
                 </button>
+                <button class="view-tab" id="tab-dns-view" data-view="dns">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
+                    🌐 Dominios & DNS
+                </button>
                 <button class="view-tab" id="tab-matrix-view" data-view="matrix">
                     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>
                     📊 Catálogo OpenAPM
@@ -642,7 +646,75 @@
         </div>
 
         <!-- ==================================================== -->
-        <!-- VIEW 6: CATÁLOGO Y MATRIZ OPENAPM                   -->
+        <!-- VIEW 6: GUÍA Y COMPARATIVA DE DOMINIOS & DNS 2026   -->
+        <!-- ==================================================== -->
+        <div id="view-dns-container" style="display: none;" class="view-pane">
+            <main class="patterns-view">
+                <div class="patterns-header-box">
+                    <h2>🌐 Dónde Comprar y Gestionar Dominios & DNS en 2026 Q4</h2>
+                    <p>
+                        Guía estratégica de <strong>Registradores a Precio Mayorista (Wholesale / At-Cost)</strong> sin trampas de renovación, <strong>DNS Anycast Gratuito ($0.00)</strong> con protección DDoS y <strong>Dynamic DNS (DDNS)</strong> para conectar servidores On-Premise.
+                    </p>
+                </div>
+
+                <!-- DNS Categories Cards Grid -->
+                <div class="patterns-cards-grid" id="dns-registrars-grid"></div>
+
+                <!-- Domain TLD Price Comparison Table -->
+                <div class="patterns-header-box" style="margin-top: 2rem;">
+                    <h3>📊 Comparativa de Precios TLD & Características de Registradores</h3>
+                    <p>Precios reales promedio anuales sin aumentos ocultos al renovar.</p>
+                </div>
+
+                <div class="table-container" style="margin-top: 1rem;">
+                    <table class="equivalency-table">
+                        <thead>
+                            <tr>
+                                <th>Registrador / Proveedor</th>
+                                <th>Tipo / Modelo</th>
+                                <th>.com (Registro / Renovación)</th>
+                                <th>.dev / .io / .ai</th>
+                                <th>WHOIS Privacy</th>
+                                <th>DNS Anycast & DNSSEC</th>
+                                <th>Uso Recomendado</th>
+                            </tr>
+                        </thead>
+                        <tbody id="dns-table-body"></tbody>
+                    </table>
+                </div>
+
+                <!-- 3-Step Setup Tutorial -->
+                <div class="patterns-header-box" style="margin-top: 2.5rem;">
+                    <h3>🚀 Protocolo de Conexión DNS en 3 Pasos (De Compra a Producción)</h3>
+                </div>
+                <div class="dns-tutorial-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem; margin-top: 1rem;">
+                    <div class="pattern-card">
+                        <div class="pattern-card-header">
+                            <h4 class="pattern-card-title">1️⃣ Comprar en Registrador Wholesale</h4>
+                            <span class="pattern-badge badge-zerocost">$0 Markup</span>
+                        </div>
+                        <p class="pattern-card-desc">Compra tu dominio en <strong>Cloudflare Registrar</strong> o <strong>Porkbun</strong> para pagar únicamente la tarifa base de ICANN sin sobrecostos de $25+ en la renovación anual.</p>
+                    </div>
+                    <div class="pattern-card">
+                        <div class="pattern-card-header">
+                            <h4 class="pattern-card-title">2️⃣ Configurar DNS Anycast ($0.00)</h4>
+                            <span class="pattern-badge">Global Anycast</span>
+                        </div>
+                        <p class="pattern-card-desc">Apunta los servidores NS a <strong>Cloudflare Free DNS</strong>. Obtienes propagación en segundos, WAF básico, mitigación DDoS ilimitada y certificados SSL automáticos.</p>
+                    </div>
+                    <div class="pattern-card">
+                        <div class="pattern-card-header">
+                            <h4 class="pattern-card-title">3️⃣ Apuntar a Nube o Servidor Local</h4>
+                            <span class="pattern-badge badge-zerocost">Tunnel / CNAME</span>
+                        </div>
+                        <p class="pattern-card-desc">Si es Serverless: usa registros <code>CNAME</code> apuntando a Vercel / Cloudflare Pages. Si es On-Premise: usa <strong>Cloudflare Tunnels</strong> o <strong>DuckDNS</strong> para evitar IPs fijas costosas.</p>
+                    </div>
+                </div>
+            </main>
+        </div>
+
+        <!-- ==================================================== -->
+        <!-- VIEW 7: CATÁLOGO Y MATRIZ OPENAPM                   -->
         <!-- ==================================================== -->
         <div id="view-matrix-container" style="display: none;">
             <section class="toolbar-section">

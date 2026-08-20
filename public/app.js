@@ -1,5 +1,5 @@
 // Cloud & APM Architecture Studio Pro 2026 Q4
-// Ultra-High Performance Engine: Multi-Theme Engine (6 Palettes), Sticky Notes & Annotations, 60/120 FPS rAF Rendering, Hardware-Accelerated Canvas, Multi-Provider AI (Gemini/Ollama/$0), FinOps Unit Economics, 1-Click Zero-Cost Optimizer & Universal IaC / Docker / K3s Exporter
+// Ultra-High Performance Engine: Multi-Theme Engine (6 Palettes), Sticky Notes & Annotations, DNS & Domain Registrar Hub, 60/120 FPS rAF Rendering, Hardware-Accelerated Canvas, Multi-Provider AI (Gemini/Ollama/$0), FinOps Unit Economics, 1-Click Zero-Cost Optimizer & Universal IaC / Docker / K3s Exporter
 (function () {
     'use strict';
 
@@ -13,7 +13,7 @@ Tu objetivo es diseñar, auditar y optimizar arquitecturas de software modernas 
 Piensas con primeros principios (First Principles) al estilo de Elon Musk, Jeff Bezos, Martin Kleppmann y Paul Graham:
 - Desafías la complejidad accidental; la mejor arquitectura es la que requiere menos piezas móviles para lograr el objetivo.
 - Prefieres soluciones Zero-Cost ($0.00), Serverless u On-Premise / Self-Hosted de alta eficiencia antes de incurrir en costos fijos de infraestructura no justificados por el tráfico.
-- Dominas el estado del arte de 2026 Q4: TanStack Start/Query, Hono.js, Supabase (pgvector/Postgres), DuckDB (OLAP embebido), Cloudflare R2 ($0 Egress), MinIO (S3 On-Prem), Traefik, Qdrant Vector DB, Ollama Local, OpenTofu / Terraform, y arquitecturas agénticas de IA con herramientas (Tool Use / RAG híbrido).
+- Dominas el estado del arte de 2026 Q4: TanStack Start/Query, Hono.js, Supabase (pgvector/Postgres), DuckDB (OLAP embebido), Cloudflare R2 ($0 Egress) & DNS Registrar At-Cost, MinIO (S3 On-Prem), Traefik, Qdrant Vector DB, Ollama Local, OpenTofu / Terraform, y arquitecturas agénticas de IA con herramientas (Tool Use / RAG híbrido).
 
 ESTRUCTURA DE EVALUACIÓN (6 PILARES):
 1. 💼 VIABILIDAD DE NEGOCIO & UNIT ECONOMICS: $/MAU, Margen Bruto de Hosting, Punto de Equilibrio y TTM.
@@ -99,6 +99,13 @@ ESTRUCTURA DE EVALUACIÓN (6 PILARES):
     // MULTI-CLOUD, ZERO-COST & ON-PREMISE SERVICE CATALOG 2026
     // -------------------------------------------------------------
     const CLOUD_SERVICES = [
+        // NETWORKING & DOMAINS / DNS
+        { id: 'cloudflare-dns', name: 'Cloudflare DNS & Registrar', category: 'Networking / DNS', eco: 'serverless', cost: '$0.00 / At-Cost', quota: 'Free Anycast + $0 Markup Domains', icon: '☁️', desc: 'El DNS Anycast más rápido y seguro del mundo con registro de dominios a precio de costo mayorista de ICANN sin sobreprecio.' },
+        { id: 'porkbun-domains', name: 'Porkbun Domains & DNS', category: 'Networking / DNS', eco: 'serverless', cost: 'At-Cost / Low', quota: 'Free WHOIS Privacy & API', icon: '🐷', desc: 'Registrador independiente con los precios de dominios más bajos del mercado, DNSSEC gratis y API para certbot.' },
+        { id: 'duckdns', name: 'DuckDNS (DDNS $0 On-Prem)', category: 'Networking / DDNS', eco: 'apm', cost: 'OSS $0', quota: '5 Free Subdomains / API', icon: '🦆', desc: 'Servicio Dynamic DNS gratuito para apuntar dominios a servidores locales y homelabs con IP dinámica.' },
+        { id: 'aws-route53', name: 'AWS Route 53 DNS', category: 'Networking / DNS', eco: 'aws', cost: '$0.50/zone', quota: 'Latency & Failover Routing', icon: '🅰️', desc: 'Servicio DNS escalable con enrutamiento por latencia, geo-proximidad, health checks y failover.' },
+        { id: 'gcp-clouddns', name: 'Google Cloud DNS', category: 'Networking / DNS', eco: 'gcp', cost: '$0.20/zone', quota: '100% SLA Anycast', icon: '🇬', desc: 'DNS Anycast global de alta disponibilidad en la red de fibra óptica privada de Google.' },
+
         // ZERO-COST / MODERN FULLSTACK PAAS
         { id: 'tanstack-start', name: 'TanStack Start / Query', category: 'Frontend / Fullstack', eco: 'serverless', cost: '$0.00', quota: 'Open Source / Type-Safe', icon: '⚡', desc: 'Framework fullstack React con SSR, TanStack Router y TanStack Query para fetching ultra-rápido.' },
         { id: 'hono', name: 'Hono.js (Edge API)', category: 'Compute / API', eco: 'serverless', cost: '$0.00', quota: 'Ultra-Fast Web Standards', icon: '🔥', desc: 'Framework web moderno basado en Web Standards que corre a máxima velocidad en Cloudflare Workers, Bun o Node.js.' },
@@ -163,6 +170,89 @@ ESTRUCTURA DE EVALUACIÓN (6 PILARES):
         { id: 'loki', name: 'Grafana Loki', category: 'Logs / Storage', eco: 'apm', cost: 'OSS $0', quota: 'Label-Indexed Log Grep', icon: 'loki', desc: 'Indexador de logs estilo grep/Prometheus altamente eficiente en RAM y disco.' },
         { id: 'signoz', name: 'SigNoz APM', category: 'All-in-One APM', eco: 'apm', cost: 'OSS $0', quota: 'OTel + ClickHouse Native APM', icon: 'inspectit', desc: 'Plataforma APM completa nativa en OpenTelemetry y ClickHouse.' },
         { id: 'kafka', name: 'Apache Kafka', category: 'Event Streaming', eco: 'apm', cost: 'OSS $0', quota: 'Distributed Event Log Broker', icon: 'kafka', desc: 'Bus de eventos distribuido de altísimo rendimiento para mensajería y telemetría.' }
+    ];
+
+    // -------------------------------------------------------------
+    // DNS & DOMAIN REGISTRARS DATASET 2026 Q4
+    // -------------------------------------------------------------
+    const DNS_REGISTRARS_DATA = [
+        {
+            id: 'dns-cloudflare',
+            name: 'Cloudflare Registrar & DNS',
+            badge: '🏆 #1 Recomendado (Wholesale)',
+            type: 'Registrador a Precio de Costo',
+            cost: '~$9.77 / año (.com)',
+            desc: 'Vende dominios al precio exacto de costo mayorista de ICANN (0% de margen de ganancia). Incluye DNS Anycast global ultra-rápido, protección DDoS ilimitada, DNSSEC en 1 clic y privacidad WHOIS gratuita de por vida.',
+            features: ['0% Markup (Solo costo ICANN)', 'WHOIS Privacy gratis de por vida', 'DNS Anycast más rápido del mundo', 'SSL/TLS Universal automático', 'Soporte API & Terraform'],
+            link: 'https://www.cloudflare.com/products/registrar/',
+            btnText: 'Ir a Cloudflare Registrar'
+        },
+        {
+            id: 'dns-porkbun',
+            name: 'Porkbun Domains',
+            badge: '🐷 Mejor para Devs & Startups',
+            type: 'Registrador Independiente Low-Cost',
+            cost: '~$10.30 / año (.com)',
+            desc: 'Registrador independiente reconocido por tener los precios de renovación más bajos de toda la industria para cientos de TLDs (.dev, .io, .ai, .app, .xyz), interfaz limpia sin publicidad engañosa y API completa para Certbot/Let\'s Encrypt.',
+            features: ['Precios ultra-bajos sin trucos', 'WHOIS Privacy gratis', 'Certificados SSL Let\'s Encrypt gratis', 'API DNS para automatización', 'Soporte de +500 extensiones TLD'],
+            link: 'https://porkbun.com/',
+            btnText: 'Ir a Porkbun'
+        },
+        {
+            id: 'dns-duckdns',
+            name: 'DuckDNS (Dynamic DNS $0)',
+            badge: '🦆 #1 para On-Premise & Homelab',
+            type: 'Dynamic DNS 100% Gratuito',
+            cost: '$0.00 / De por vida',
+            desc: 'Servicio de Dynamic DNS (DDNS) gratuito para conectar servidores locales, Raspberry Pi, homelabs y contenedores Docker con IPs residenciales dinámicas. Permite crear hasta 5 subdominios *.duckdns.org.',
+            features: ['100% Gratuito ($0.00)', 'Hasta 5 subdominios *.duckdns.org', 'Script cron / curl de 1 línea', 'Compatible con Traefik y Nginx', 'Cero costo de renovación'],
+            link: 'https://www.duckdns.org/',
+            btnText: 'Ir a DuckDNS'
+        },
+        {
+            id: 'dns-aws-route53',
+            name: 'Amazon Route 53',
+            badge: '🅰️ Enterprise Multi-Cloud DNS',
+            type: 'Cloud DNS & Enrutamiento Global',
+            cost: '$0.50 / zona alojada / mes',
+            desc: 'Servicio DNS de alta disponibilidad y baja latencia de AWS. Destaca por sus políticas avanzadas de enrutamiento por latencia geográfica, geo-proximidad, health checks automatizados y failover activo-pasivo.',
+            features: ['Enrutamiento por latencia & Geo', 'Health Checks & Auto-Failover', 'Alias Records directos a ALB/S3', 'Integración nativa con IAM/Terraform', '100% SLA de disponibilidad'],
+            link: 'https://aws.amazon.com/route53/',
+            btnText: 'Ver AWS Route 53'
+        },
+        {
+            id: 'dns-spaceship',
+            name: 'Spaceship (Next-Gen Registrar)',
+            badge: '🚀 Nueva Plataforma Moderna',
+            type: 'Registrador Moderno Integrado',
+            cost: '~$8.98 primer año / ~$10.50 renov.',
+            desc: 'Plataforma de dominios de última generación desarrollada por Namecheap con panel reactivo ultra-rápido, gestión modular de registros DNS, buzones de correo y certificados SSL con configuración en 1 clic.',
+            features: ['Panel moderno ultra-rápido', 'WHOIS Privacy gratis', 'DNS Anycast básico incluido', 'Gestión rápida de registros TXT/CNAME', 'Descuentos en primer año'],
+            link: 'https://www.spaceship.com/',
+            btnText: 'Ir a Spaceship'
+        },
+        {
+            id: 'dns-gcp',
+            name: 'Google Cloud DNS',
+            badge: '🇬 100% SLA Anycast Global',
+            type: 'Enterprise Managed Cloud DNS',
+            cost: '$0.20 / zona / mes',
+            desc: 'Servicio DNS autoritativo escalable que opera sobre la red de fibra óptica mundial de Google, ofreciendo un SLA del 100% de disponibilidad, soporte de DNSSEC y zonas privadas integradas con Google Cloud VPC.',
+            features: ['100% SLA de disponibilidad', 'Zonas privadas para VPC interna', 'Anycast en la red de Google', 'Soporte gcloud CLI y Terraform', 'Costo ultra-bajo ($0.20/zona)'],
+            link: 'https://cloud.google.com/dns',
+            btnText: 'Ver Google Cloud DNS'
+        }
+    ];
+
+    const DNS_PRICING_TABLE_DATA = [
+        { name: 'Cloudflare Registrar', model: 'Wholesale At-Cost (0% Markup)', com: '~$9.77 / ~$9.77', other: '.dev $12 • .io $38 • .ai $70', privacy: '✅ Gratis de por vida', dnssec: '✅ Anycast Global + DNSSEC 1-Clic', use: '🏆 Producción, SaaS, APIs y $0 Markup' },
+        { name: 'Porkbun', model: 'Low-Margin Independent', com: '~$10.30 / ~$10.30', other: '.dev $12.50 • .io $36 • .ai $68', privacy: '✅ Gratis de por vida', dnssec: '✅ Anycast + DNSSEC + API abierta', use: '🐷 Startups, desarrolladores y TLDs variados' },
+        { name: 'Spaceship', model: 'Next-Gen Modern Registrar', com: '~$8.98 (año 1) / ~$10.50', other: '.dev $13 • .io $37 • .ai $69', privacy: '✅ Gratis de por vida', dnssec: '✅ Anycast + DNSSEC incluido', use: '🚀 Proyectos nuevos y gestión unificada' },
+        { name: 'DuckDNS', model: 'Dynamic DNS 100% Gratuito', com: '$0.00 (*.duckdns.org)', other: '5 Subdominios Gratis', privacy: '✅ 100% Privado', dnssec: '✅ Script curl / Token API', use: '🦆 Homelabs, On-Premise y Raspberry Pi' },
+        { name: 'AWS Route 53', model: 'Cloud DNS & Domain Registrar', com: '~$14.00 / ~$14.00', other: '.dev $14 • .io $43 • .ai $80', privacy: '✅ Gratis', dnssec: '✅ Enrutamiento Latencia / Failover ($0.50/m)', use: '🅰️ Infraestructuras empresariales en AWS' },
+        { name: 'Google Cloud DNS', model: 'Managed Enterprise Cloud DNS', com: '~$14.00 (vía Squarespace)', other: '.dev $12 • .io $40 • .ai $75', privacy: '✅ Gratis', dnssec: '✅ 100% SLA Anycast ($0.20/zona/m)', use: '🇬 Infraestructuras y VPC privadas en GCP' },
+        { name: 'Namecheap', model: 'Tradicional Promocional', com: '~$10.28 (año 1) / ~$14.98', other: '.dev $14 • .io $42 • .ai $75', privacy: '✅ Gratis (Privacy Guardian)', dnssec: '⚠️ Anycast Premium de pago', use: '🏷️ TLDs exóticos y ofertas iniciales' },
+        { name: 'GoDaddy (⚠️ Alerta FinOps)', model: 'Trampa de Renovación Cara', com: '~$1.00 (año 1) ➔ ~$22.99+ renov.', other: '.dev $24 • .io $60 • .ai $95', privacy: '❌ Se cobra aparte (~$9.99/año)', dnssec: '❌ DNS básico lento / DNSSEC de pago', use: '⛔ NO RECOMENDADO por sobreprecios ocultos' }
     ];
 
     // -------------------------------------------------------------
@@ -243,18 +333,20 @@ ESTRUCTURA DE EVALUACIÓN (6 PILARES):
                 { id: 'z_ecom_data', title: 'Transactional Ledger & Event Queue', type: 'onprem', x: 720, y: 70, width: 300, height: 420 }
             ],
             nodes: [
-                { componentId: 'cloudflare-workers', x: 65, y: 130 },
-                { componentId: 'traefik', x: 65, y: 260 },
+                { componentId: 'cloudflare-dns', x: 65, y: 110 },
+                { componentId: 'cloudflare-workers', x: 65, y: 230 },
+                { componentId: 'traefik', x: 65, y: 350 },
                 { componentId: 'hono', x: 400, y: 120 },
                 { componentId: 'upstash-redis', x: 400, y: 260 },
                 { componentId: 'postgresql-onprem', x: 750, y: 120 },
                 { componentId: 'rabbitmq', x: 750, y: 260 }
             ],
             connections: [
-                { from: 0, to: 2, label: 'Checkout HTTPS' },
-                { from: 2, to: 3, label: 'Distributed Lock' },
-                { from: 2, to: 4, label: 'SQL Ledger Write' },
-                { from: 2, to: 5, label: 'Publish Order Evt' }
+                { from: 0, to: 1, label: 'DNS Anycast' },
+                { from: 1, to: 3, label: 'Checkout HTTPS' },
+                { from: 3, to: 4, label: 'Distributed Lock' },
+                { from: 3, to: 5, label: 'SQL Ledger Write' },
+                { from: 3, to: 6, label: 'Publish Order Evt' }
             ],
             notes: [
                 { id: 'note_ecom_1', text: '🔒 **PCI-DSS Compliance**: Cero almacenamiento de números de tarjeta en la base de datos local. Usar tokens efímeros de Stripe / Adyen.', color: 'yellow', x: 370, y: 510, width: 300, height: 110 }
@@ -296,17 +388,19 @@ ESTRUCTURA DE EVALUACIÓN (6 PILARES):
                 { id: 'z_game_telemetry', title: 'High-Volume OLAP Telemetry', type: 'onprem', x: 720, y: 80, width: 300, height: 380 }
             ],
             nodes: [
-                { componentId: 'cloudflare-workers', x: 65, y: 150 },
+                { componentId: 'cloudflare-dns', x: 65, y: 110 },
+                { componentId: 'cloudflare-workers', x: 65, y: 230 },
                 { componentId: 'upstash-redis', x: 400, y: 130 },
                 { componentId: 'traefik', x: 400, y: 260 },
                 { componentId: 'clickhouse', x: 750, y: 130 },
                 { componentId: 'grafana', x: 750, y: 260 }
             ],
             connections: [
-                { from: 0, to: 1, label: 'Room State WS' },
-                { from: 0, to: 2, label: 'UDP/TCP Proxy' },
-                { from: 1, to: 3, label: 'Batch Telemetry' },
-                { from: 4, to: 3, label: 'Live Dashboards' }
+                { from: 0, to: 1, label: 'Fast Anycast' },
+                { from: 1, to: 2, label: 'Room State WS' },
+                { from: 1, to: 3, label: 'UDP/TCP Proxy' },
+                { from: 2, to: 4, label: 'Batch Telemetry' },
+                { from: 5, to: 4, label: 'Live Dashboards' }
             ]
         },
         'fintech-acid-core': {
@@ -357,7 +451,8 @@ ESTRUCTURA DE EVALUACIÓN (6 PILARES):
                 { id: 'z_onprem_data', title: 'Persistence & Observability Tier', type: 'onprem', x: 720, y: 70, width: 300, height: 420 }
             ],
             nodes: [
-                { componentId: 'traefik', x: 65, y: 140 },
+                { componentId: 'duckdns', x: 65, y: 110 },
+                { componentId: 'traefik', x: 65, y: 240 },
                 { componentId: 'hono', x: 400, y: 120 },
                 { componentId: 'rabbitmq', x: 400, y: 260 },
                 { componentId: 'postgresql-onprem', x: 750, y: 110 },
@@ -365,11 +460,12 @@ ESTRUCTURA DE EVALUACIÓN (6 PILARES):
                 { componentId: 'minio', x: 750, y: 330 }
             ],
             connections: [
-                { from: 0, to: 1, label: 'HTTP/2 SSL' },
-                { from: 1, to: 4, label: 'Redis Session' },
-                { from: 1, to: 3, label: 'Postgres SQL' },
-                { from: 1, to: 2, label: 'AMQP Publish' },
-                { from: 1, to: 5, label: 'S3 API (MinIO)' }
+                { from: 0, to: 1, label: 'DDNS Ingress' },
+                { from: 1, to: 2, label: 'HTTP/2 SSL' },
+                { from: 2, to: 5, label: 'Redis Session' },
+                { from: 2, to: 4, label: 'Postgres SQL' },
+                { from: 2, to: 3, label: 'AMQP Publish' },
+                { from: 2, to: 6, label: 'S3 API (MinIO)' }
             ],
             notes: [
                 { id: 'note_onprem_1', text: '🏢 **TCO Optimizado**: Servidor Ryzen 9 (64GB RAM) = $41.20 USD/mes de energía y amortización vs +$280 USD/mes en AWS.', color: 'blue', x: 370, y: 510, width: 300, height: 110 }
@@ -409,17 +505,19 @@ ESTRUCTURA DE EVALUACIÓN (6 PILARES):
                 { id: 'z_hyb_onprem', title: 'Private Homelab / Bare-Metal Core', type: 'onprem', x: 720, y: 80, width: 300, height: 380 }
             ],
             nodes: [
-                { componentId: 'vercel', x: 65, y: 140 },
-                { componentId: 'cloudflare-workers', x: 65, y: 270 },
+                { componentId: 'cloudflare-dns', x: 65, y: 110 },
+                { componentId: 'vercel', x: 65, y: 220 },
+                { componentId: 'cloudflare-workers', x: 65, y: 330 },
                 { componentId: 'traefik', x: 400, y: 200 },
                 { componentId: 'postgresql-onprem', x: 750, y: 140 },
                 { componentId: 'minio', x: 750, y: 270 }
             ],
             connections: [
-                { from: 0, to: 2, label: 'Tunnel RPC' },
-                { from: 1, to: 2, label: 'Tunnel Proxy' },
-                { from: 2, to: 3, label: 'Postgres SQL' },
-                { from: 2, to: 4, label: 'S3 API' }
+                { from: 0, to: 1, label: 'DNS Anycast' },
+                { from: 1, to: 3, label: 'Tunnel RPC' },
+                { from: 2, to: 3, label: 'Tunnel Proxy' },
+                { from: 3, to: 4, label: 'Postgres SQL' },
+                { from: 3, to: 5, label: 'S3 API' }
             ]
         },
         'gcp-enterprise-vpc': {
@@ -430,8 +528,9 @@ ESTRUCTURA DE EVALUACIÓN (6 PILARES):
                 { id: 'z_gcp_db', title: 'Private Data & Cache Subnet (10.0.2.0/24)', type: 'gcp', x: 720, y: 70, width: 300, height: 420 }
             ],
             nodes: [
-                { componentId: 'gcp-cloudarmor', x: 65, y: 120 },
-                { componentId: 'gcp-cloudcdn', x: 65, y: 260 },
+                { componentId: 'gcp-clouddns', x: 65, y: 90 },
+                { componentId: 'gcp-cloudarmor', x: 65, y: 200 },
+                { componentId: 'gcp-cloudcdn', x: 65, y: 310 },
                 { componentId: 'gcp-cloudrun', x: 400, y: 120 },
                 { componentId: 'gcp-cloudtasks', x: 400, y: 260 },
                 { componentId: 'gcp-cloudsql', x: 750, y: 120 },
@@ -439,12 +538,13 @@ ESTRUCTURA DE EVALUACIÓN (6 PILARES):
                 { componentId: 'gcp-bigquery', x: 750, y: 360 }
             ],
             connections: [
-                { from: 0, to: 1, label: 'WAF Filter' },
-                { from: 1, to: 2, label: 'HTTPS Proxy' },
-                { from: 2, to: 3, label: 'Enqueue Task' },
-                { from: 2, to: 5, label: 'Redis Cache' },
-                { from: 2, to: 4, label: 'Postgres SQL' },
-                { from: 3, to: 6, label: 'Batch Stream' }
+                { from: 0, to: 1, label: '100% SLA DNS' },
+                { from: 1, to: 2, label: 'WAF Filter' },
+                { from: 2, to: 3, label: 'HTTPS Proxy' },
+                { from: 3, to: 4, label: 'Enqueue Task' },
+                { from: 3, to: 6, label: 'Redis Cache' },
+                { from: 3, to: 5, label: 'Postgres SQL' },
+                { from: 4, to: 7, label: 'Batch Stream' }
             ]
         },
         'tanstack-hono-supabase': {
@@ -476,17 +576,19 @@ ESTRUCTURA DE EVALUACIÓN (6 PILARES):
                 { id: 'z_storage', title: 'Storage & Assets ($0 Egress)', type: 'zerocost', x: 760, y: 80, width: 280, height: 420 }
             ],
             nodes: [
-                { componentId: 'vercel', x: 70, y: 130 },
-                { componentId: 'cloudflare-workers', x: 70, y: 280 },
+                { componentId: 'cloudflare-dns', x: 70, y: 90 },
+                { componentId: 'vercel', x: 70, y: 200 },
+                { componentId: 'cloudflare-workers', x: 70, y: 310 },
                 { componentId: 'supabase', x: 410, y: 130 },
                 { componentId: 'sqlite-turso', x: 410, y: 280 },
                 { componentId: 'cloudflare-r2', x: 790, y: 200 }
             ],
             connections: [
-                { from: 0, to: 2, label: 'HTTPS / Auth' },
-                { from: 0, to: 3, label: 'SQL LibSQL' },
-                { from: 1, to: 4, label: 'S3 API ($0 Egress)' },
-                { from: 2, to: 4, label: 'Media Assets' }
+                { from: 0, to: 1, label: 'Fast DNS Anycast' },
+                { from: 1, to: 3, label: 'HTTPS / Auth' },
+                { from: 1, to: 4, label: 'SQL LibSQL' },
+                { from: 2, to: 5, label: 'S3 API ($0 Egress)' },
+                { from: 3, to: 5, label: 'Media Assets' }
             ]
         },
         'zero-cost-analytics': {
@@ -516,6 +618,7 @@ ESTRUCTURA DE EVALUACIÓN (6 PILARES):
                 { id: 'z_webapp', title: 'Web Application Tier (Serverless)', type: 'aws', x: 620, y: 70, width: 440, height: 480 }
             ],
             nodes: [
+                { componentId: 'aws-route53', x: 920, y: 140 },
                 { componentId: 'aws-apigateway', x: 920, y: 270 },
                 { componentId: 'aws-lambda', x: 740, y: 110 },
                 { componentId: 'aws-lambda', x: 740, y: 190 },
@@ -535,25 +638,26 @@ ESTRUCTURA DE EVALUACIÓN (6 PILARES):
                 { componentId: 'aws-redshift', x: 460, y: 110 }
             ],
             connections: [
-                { from: 0, to: 1, label: 'Create' },
-                { from: 0, to: 2, label: 'Read' },
-                { from: 0, to: 3, label: 'Update' },
-                { from: 0, to: 4, label: 'Delete' },
-                { from: 1, to: 5, label: 'Write' },
-                { from: 2, to: 5, label: 'Read' },
-                { from: 3, to: 6, label: 'Ingest Stream' },
-                { from: 4, to: 6, label: 'Ingest Stream' },
-                { from: 6, to: 7, label: 'Consume' },
-                { from: 7, to: 8, label: 'Web Session' },
-                { from: 7, to: 9, label: 'Usage Analytics' },
-                { from: 8, to: 10, label: 'Batch S3' },
-                { from: 9, to: 10, label: 'Batch S3' },
-                { from: 11, to: 10, label: 'SQL Scan' },
-                { from: 11, to: 12, label: 'Query Output' },
-                { from: 12, to: 13, label: 'Trigger Event' },
-                { from: 13, to: 14, label: 'Enqueue' },
-                { from: 14, to: 15, label: 'Worker Pull' },
-                { from: 15, to: 16, label: 'Load Redshift' }
+                { from: 0, to: 1, label: 'Alias Record' },
+                { from: 1, to: 2, label: 'Create' },
+                { from: 1, to: 3, label: 'Read' },
+                { from: 1, to: 4, label: 'Update' },
+                { from: 1, to: 5, label: 'Delete' },
+                { from: 2, to: 6, label: 'Write' },
+                { from: 3, to: 6, label: 'Read' },
+                { from: 4, to: 7, label: 'Ingest Stream' },
+                { from: 5, to: 7, label: 'Ingest Stream' },
+                { from: 7, to: 8, label: 'Consume' },
+                { from: 8, to: 9, label: 'Web Session' },
+                { from: 8, to: 10, label: 'Usage Analytics' },
+                { from: 9, to: 11, label: 'Batch S3' },
+                { from: 10, to: 11, label: 'Batch S3' },
+                { from: 12, to: 11, label: 'SQL Scan' },
+                { from: 12, to: 13, label: 'Query Output' },
+                { from: 13, to: 14, label: 'Trigger Event' },
+                { from: 14, to: 15, label: 'Enqueue' },
+                { from: 15, to: 16, label: 'Worker Pull' },
+                { from: 16, to: 17, label: 'Load Redshift' }
             ]
         },
         'gcp-cloudrun-bigquery': {
@@ -645,6 +749,7 @@ ESTRUCTURA DE EVALUACIÓN (6 PILARES):
     // EQUIVALENCY DATASET
     // -------------------------------------------------------------
     const EQUIVALENCY_DATA = [
+        { category: 'DNS Autoritativo & Registro', aws: 'Route 53', gcp: 'Cloud DNS', azure: 'Azure DNS', zerocost: 'Cloudflare DNS (Free) / DuckDNS ($0)', oss: 'CoreDNS / BIND' },
         { category: 'NoSQL Key-Value / Document', aws: 'DynamoDB', gcp: 'Cloud Firestore / Bigtable', azure: 'Cosmos DB', zerocost: 'Upstash Redis / Cloudflare KV', oss: 'Redis / ScyllaDB' },
         { category: 'Base de Datos Relacional (SQL)', aws: 'RDS Aurora PostgreSQL', gcp: 'Cloud SQL / AlloyDB', azure: 'Azure SQL', zerocost: 'Supabase / Neon / Turso (SQLite)', oss: 'PostgreSQL / SQLite' },
         { category: 'Analítica / Data Warehouse (OLAP)', aws: 'Redshift / Athena', gcp: 'BigQuery', azure: 'Synapse Analytics', zerocost: 'DuckDB (Embedded) / ClickHouse Free', oss: 'ClickHouse / DuckDB' },
@@ -668,9 +773,9 @@ ESTRUCTURA DE EVALUACIÓN (6 PILARES):
             useCase: 'El backend serverless definitivo para cualquier SaaS, MVP o app móvil sin pagar un solo dólar.'
         },
         {
-            name: 'Cloudflare (Workers + R2 + Tunnels)',
+            name: 'Cloudflare (Workers + R2 + DNS + Tunnels)',
             badge: 'Edge Cloud con $0 Egress',
-            limits: ['Workers: 100,000 peticiones gratis al día', 'R2 Storage: 10 GB de archivos con $0.00 costo de salida', 'Zero Trust Tunnels: Conecta servidores On-Premise a Internet 100% gratis'],
+            limits: ['DNS Anycast: Ilimitado & 100% Gratuito', 'Workers: 100,000 peticiones gratis al día', 'R2 Storage: 10 GB de archivos con $0.00 costo de salida', 'Zero Trust Tunnels: Conecta servidores On-Premise a Internet 100% gratis'],
             gotchas: 'Workers tiene límite de CPU de 10ms-50ms por request (perfecto para APIs y microservicios rápidos).',
             useCase: 'Almacenar terabytes de videos/imágenes sin pagar las exorbitantes tarifas de salida de AWS S3.'
         },
@@ -703,6 +808,8 @@ ESTRUCTURA DE EVALUACIÓN (6 PILARES):
         setupCostSimulator();
         setupAdvisorEngine();
         setupPatternsCatalog();
+        renderDNSRegistrarsCards();
+        renderDNSTable();
         renderEquivalencyTable();
         renderZeroCostCards();
         setupProjectsManager();
@@ -790,6 +897,7 @@ ESTRUCTURA DE EVALUACIÓN (6 PILARES):
             'simulator': document.getElementById('view-simulator-container'),
             'patterns': document.getElementById('view-patterns-container'),
             'advisor': document.getElementById('view-advisor-container'),
+            'dns': document.getElementById('view-dns-container'),
             'equivalency': document.getElementById('view-equivalency-container'),
             'zerocost': document.getElementById('view-zerocost-container'),
             'matrix': document.getElementById('view-matrix-container')
@@ -811,6 +919,65 @@ ESTRUCTURA DE EVALUACIÓN (6 PILARES):
                 }
             });
         });
+    }
+
+    // -------------------------------------------------------------
+    // DNS & DOMAIN REGISTRARS HUB 2026
+    // -------------------------------------------------------------
+    function renderDNSRegistrarsCards() {
+        const grid = document.getElementById('dns-registrars-grid');
+        if (!grid) return;
+        grid.innerHTML = '';
+        const frag = document.createDocumentFragment();
+
+        DNS_REGISTRARS_DATA.forEach(reg => {
+            const card = document.createElement('div');
+            card.className = 'pattern-card';
+            card.innerHTML = `
+                <div>
+                    <div class="pattern-card-header">
+                        <h4 class="pattern-card-title">${escapeHtml(reg.name)}</h4>
+                        <span class="pattern-badge ${reg.cost.includes('$0.00') || reg.cost.includes('~$9.77') ? 'badge-zerocost' : ''}">${escapeHtml(reg.badge)}</span>
+                    </div>
+                    <div style="font-size: 0.72rem; color: var(--accent-cyan); font-weight: 600; margin-bottom: 0.4rem;">${escapeHtml(reg.type)}</div>
+                    <p class="pattern-card-desc">${escapeHtml(reg.desc)}</p>
+                    <div class="pattern-stack-tags">
+                        ${reg.features.map(f => `<span class="stack-tag">${escapeHtml(f)}</span>`).join('')}
+                    </div>
+                </div>
+                <div class="pattern-footer-row" style="margin-top: 1rem;">
+                    <span class="pattern-cost-pill">${escapeHtml(reg.cost)}</span>
+                    <a href="${reg.link}" target="_blank" rel="noopener noreferrer" class="action-btn primary-btn" style="text-decoration: none; font-size: 0.72rem;">
+                        ${escapeHtml(reg.btnText)} ↗
+                    </a>
+                </div>
+            `;
+            frag.appendChild(card);
+        });
+        grid.appendChild(frag);
+    }
+
+    function renderDNSTable() {
+        const tbody = document.getElementById('dns-table-body');
+        if (!tbody) return;
+        tbody.innerHTML = '';
+        const frag = document.createDocumentFragment();
+
+        DNS_PRICING_TABLE_DATA.forEach(row => {
+            const tr = document.createElement('tr');
+            const isWarning = row.name.includes('GoDaddy');
+            tr.innerHTML = `
+                <td><strong style="${isWarning ? 'color: var(--accent-rose);' : ''}">${escapeHtml(row.name)}</strong></td>
+                <td><span style="font-size: 0.75rem; color: var(--text-muted);">${escapeHtml(row.model)}</span></td>
+                <td><strong style="color: ${isWarning ? 'var(--accent-rose)' : 'var(--accent-emerald)'};">${escapeHtml(row.com)}</strong></td>
+                <td><span style="font-size: 0.72rem; color: var(--text-dim);">${escapeHtml(row.other)}</span></td>
+                <td><span style="font-size: 0.75rem;">${escapeHtml(row.privacy)}</span></td>
+                <td><span style="font-size: 0.75rem;">${escapeHtml(row.dnssec)}</span></td>
+                <td><span class="service-pill ${isWarning ? 'pill-aws' : 'pill-zerocost'}">${escapeHtml(row.use)}</span></td>
+            `;
+            frag.appendChild(tr);
+        });
+        tbody.appendChild(frag);
     }
 
     // -------------------------------------------------------------
@@ -1179,7 +1346,7 @@ ESTRUCTURA DE EVALUACIÓN (6 PILARES):
             portIn.addEventListener('mouseup', (e) => {
                 if (isConnecting && connectSourceNode && connectSourceNode.instanceId !== node.instanceId) {
                     e.stopPropagation();
-                    const label = prompt('Protocolo de conexión (ej: HTTPS, gRPC, SQL, Stream, OTLP):', 'HTTPS') || 'HTTPS';
+                    const label = prompt('Protocolo de conexión (ej: HTTPS, gRPC, SQL, Stream, OTLP, DNS):', 'HTTPS') || 'HTTPS';
                     activeConnections.push({
                         id: 'conn_' + nextConnId++,
                         fromInstanceId: connectSourceNode.instanceId,
@@ -1590,6 +1757,8 @@ ESTRUCTURA DE EVALUACIÓN (6 PILARES):
         }
 
         const replacements = {
+            'aws-route53': { id: 'cloudflare-dns', name: 'Cloudflare DNS & Registrar', eco: 'serverless', cost: '$0.00 / At-Cost', quota: 'Free Anycast + $0 Markup' },
+            'gcp-clouddns': { id: 'cloudflare-dns', name: 'Cloudflare DNS & Registrar', eco: 'serverless', cost: '$0.00 / At-Cost', quota: 'Free Anycast + $0 Markup' },
             'aws-alb': { id: 'traefik', name: 'Traefik SSL Proxy', eco: 'apm', cost: 'OSS $0', quota: 'Self-Hosted / Auto SSL' },
             'azure-frontdoor': { id: 'traefik', name: 'Traefik Edge Router', eco: 'apm', cost: 'OSS $0', quota: 'Self-Hosted / Auto SSL' },
             'gcp-cloudarmor': { id: 'traefik', name: 'Traefik WAF & SSL', eco: 'apm', cost: 'OSS $0', quota: 'Self-Hosted' },
@@ -1625,7 +1794,7 @@ ESTRUCTURA DE EVALUACIÓN (6 PILARES):
                 node.eco = rep.eco;
                 node.cost = rep.cost;
                 node.quota = rep.quota;
-                node.icon = (rep.id === 'minio') ? '🗄️' : (rep.id === 'traefik' ? '🚦' : (rep.id === 'rabbitmq' ? '🐇' : (rep.id === 'qdrant' ? '🧠' : (rep.id === 'ollama-engine' ? '🦙' : (rep.id === 'k3s-cluster' ? '☸️' : node.icon)))));
+                node.icon = (rep.id === 'minio') ? '🗄️' : (rep.id === 'traefik' ? '🚦' : (rep.id === 'rabbitmq' ? '🐇' : (rep.id === 'qdrant' ? '🧠' : (rep.id === 'ollama-engine' ? '🦙' : (rep.id === 'k3s-cluster' ? '☸️' : (rep.id === 'cloudflare-dns' ? '☁️' : node.icon))))));
                 replacedCount++;
             }
         });
@@ -1694,7 +1863,7 @@ ESTRUCTURA DE EVALUACIÓN (6 PILARES):
         const btnAddMarker = document.getElementById('btn-add-step-marker');
         if (btnAddMarker) {
             btnAddMarker.addEventListener('click', () => {
-                const text = prompt('Etiqueta del paso (ej: Ingress SSL, Rate Limit, Auth, SQL Write):', 'Paso de Flujo') || 'Paso';
+                const text = prompt('Etiqueta del paso (ej: Ingress SSL, Rate Limit, Auth, SQL Write, DNS Anycast):', 'Paso de Flujo') || 'Paso';
                 const marker = {
                     id: 'marker_' + nextMarkerId++,
                     num: String(placedCanvasMarkers.length + 1),
@@ -2050,14 +2219,14 @@ ESTRUCTURA DE EVALUACIÓN (6 PILARES):
         let report = '';
         if (type === 'audit') {
             report += '🔍 RESULTADOS DE AUDITORÍA DE ARQUITECTURA (MASTER FRAMEWORK 2026):\n\n';
-            const hasAlb = placedCanvasNodes.some(n => n.componentId === 'aws-alb' || n.componentId === 'azure-frontdoor' || n.componentId === 'gcp-cloudcdn' || n.componentId === 'gcp-cloudarmor' || n.componentId === 'traefik');
+            const hasAlb = placedCanvasNodes.some(n => n.componentId === 'aws-alb' || n.componentId === 'azure-frontdoor' || n.componentId === 'gcp-cloudcdn' || n.componentId === 'gcp-cloudarmor' || n.componentId === 'traefik' || n.componentId === 'cloudflare-dns');
             const hasDB = placedCanvasNodes.some(n => n.category.includes('Database') || n.category.includes('SQL'));
             const hasQueue = placedCanvasNodes.some(n => n.category.includes('Queue') || n.category.includes('Streaming') || n.componentId === 'gcp-cloudtasks' || n.componentId === 'rabbitmq' || n.componentId === 'kafka');
 
             if (!hasAlb && placedCanvasNodes.length > 2) {
-                report += '⚠️ [SPOF CRÍTICO]: No hay un WAF / Load Balancer frontal (Traefik / Cloud Armor). Las peticiones van directo al cómputo.\n';
+                report += '⚠️ [SPOF CRÍTICO]: No hay un WAF / DNS / Load Balancer frontal (Cloudflare DNS / Traefik / Cloud Armor). Las peticiones van directo al cómputo.\n';
             } else {
-                report += '✅ [INGRESS SEGURO]: El punto de entrada cuenta con enrutador / proxy distribuido con terminación SSL.\n';
+                report += '✅ [INGRESS SEGURO]: El punto de entrada cuenta con enrutador / proxy distribuido con terminación SSL y Anycast.\n';
             }
 
             if (hasDB) {
@@ -2072,10 +2241,11 @@ ESTRUCTURA DE EVALUACIÓN (6 PILARES):
             const isUsingAWS = placedCanvasNodes.some(n => n.eco === 'aws');
             const isUsingGCP = placedCanvasNodes.some(n => n.eco === 'gcp');
             if (isUsingAWS || isUsingGCP) {
-                report += '1. Reemplaza el Application Load Balancer ($18/mo) por Traefik en tu servidor local ($0.00) o Cloudflare Workers ($0.00).\n';
-                report += '2. Si usas Amazon S3 / GCS, transfiere tus assets a MinIO (S3 On-Prem) o Cloudflare R2 para eliminar el 100% de los costos de salida de datos ($0 Egress).\n';
-                report += '3. Para bases de datos, despliega PostgreSQL dedicado en disco NVMe o usa Supabase/Turso para mantener el costo mensual en $0.00.\n';
-                report += '4. Usa el botón "💸 Convertir a $0 / On-Prem" en la barra superior para aplicar estos reemplazos con 1 clic.\n';
+                report += '1. Adquiere tus dominios a precio de costo ICANN en Cloudflare Registrar (~$9.77/año .com) o Porkbun para evitar sobrecostos de $25+ en renovación.\n';
+                report += '2. Reemplaza el Application Load Balancer ($18/mo) por Traefik en tu servidor local ($0.00) o Cloudflare Workers ($0.00).\n';
+                report += '3. Si usas Amazon S3 / GCS, transfiere tus assets a MinIO (S3 On-Prem) o Cloudflare R2 para eliminar el 100% de los costos de salida de datos ($0 Egress).\n';
+                report += '4. Para bases de datos, despliega PostgreSQL dedicado en disco NVMe o usa Supabase/Turso para mantener el costo mensual en $0.00.\n';
+                report += '5. Usa el botón "💸 Convertir a $0 / On-Prem" en la barra superior para aplicar estos reemplazos con 1 clic.\n';
             } else {
                 report += '✅ Tu arquitectura actual se encuentra optimizada para operar en modo Zero-Cost / On-Premise ($0.00 / mes) con cero facturas en la nube.\n';
             }
@@ -2222,14 +2392,14 @@ ESTRUCTURA DE EVALUACIÓN (6 PILARES):
             title = 'Stack On-Premise & Private Local AI (100% Self-Hosted)';
             cost = '$0.00 Cloud (Hardware Propio)';
             scale = 'Throughput nativo NVMe';
-            components = ['Traefik SSL Proxy', 'Ollama Local LLM', 'Qdrant Vector DB', 'PostgreSQL Dedicated', 'MinIO (S3 On-Prem)', 'Grafana LGTM'];
+            components = ['DuckDNS (DDNS $0)', 'Traefik SSL Proxy', 'Ollama Local LLM', 'Qdrant Vector DB', 'PostgreSQL Dedicated', 'MinIO (S3 On-Prem)', 'Grafana LGTM'];
             justification = 'Máxima privacidad, cero costos recurrentes en la nube y total control de datos.';
             targetPreset = 'onprem-enterprise-stack';
         } else if (usecase === 'serverless-data' || (env === 'aws' && usecase === 'analytics-bi')) {
             title = 'Pipeline Serverless & Analítica AWS (100% Sin Docker)';
             cost = '$15.00 - $45.00 / mes';
             scale = 'Millones de eventos / Pay-per-Use';
-            components = ['API Gateway + Lambda', 'DynamoDB + Kinesis Streams', 'Kinesis Firehose ➔ Amazon S3', 'Amazon Athena (SQL Serverless)', 'Amazon Redshift (DWH)'];
+            components = ['AWS Route 53 DNS', 'API Gateway + Lambda', 'DynamoDB + Kinesis Streams', 'Kinesis Firehose ➔ Amazon S3', 'Amazon Athena (SQL Serverless)', 'Amazon Redshift (DWH)'];
             justification = 'Arquitectura 100% libre de servidores y Docker. Paga únicamente por cada llamada y consulta ejecutada.';
             targetPreset = 'aws-serverless-analytics';
         } else if (env === 'zero-cost') {
@@ -2237,14 +2407,14 @@ ESTRUCTURA DE EVALUACIÓN (6 PILARES):
                 title = 'Stack Analítico Zero-Cost (DuckDB + Cloudflare R2 + Grafana)';
                 cost = '$0.00 / mes';
                 scale = 'Millones de filas en Parquet';
-                components = ['Cloudflare Workers', 'Cloudflare R2 ($0 Egress)', 'DuckDB (Motor SQL Embebido)', 'Grafana / Evidence'];
+                components = ['Cloudflare DNS ($0)', 'Cloudflare Workers', 'Cloudflare R2 ($0 Egress)', 'DuckDB (Motor SQL Embebido)', 'Grafana / Evidence'];
                 justification = 'DuckDB elimina la necesidad de pagar Data Warehouses costosos como BigQuery. Procesa Parquet directamente en S3/R2 a costo cero.';
                 targetPreset = 'zero-cost-analytics';
             } else {
                 title = 'Stack Fullstack Zero-Cost 2026 (TanStack Start + Hono.js + Supabase + Cloudflare R2)';
                 cost = '$0.00 / mes (Free Tier)';
                 scale = '50,000 usuarios activos / 100GB tráfico';
-                components = ['TanStack Start / Query', 'Hono.js API (Workers)', 'Supabase (PostgreSQL + pgvector)', 'Cloudflare R2 ($0 Egress)'];
+                components = ['Cloudflare DNS ($0)', 'TanStack Start / Query', 'Hono.js API (Workers)', 'Supabase (PostgreSQL + pgvector)', 'Cloudflare R2 ($0 Egress)'];
                 justification = 'Combina el stack más rápido y con mayor Free Tier en 2026. Cubre Auth, DB relacional, Storage de archivos y Type-Safety sin gastar un solo dólar.';
                 targetPreset = 'tanstack-hono-supabase';
             }
@@ -2252,14 +2422,14 @@ ESTRUCTURA DE EVALUACIÓN (6 PILARES):
             title = 'Arquitectura Google Cloud Enterprise Multi-Tier VPC (Prod Ready)';
             cost = '$24.50 - $65.00 / mes';
             scale = '0 a 10,000 req/sec';
-            components = ['Cloud Armor WAF', 'Cloud CDN', 'Cloud Run (Contenedores Serverless)', 'Cloud SQL Postgres', 'Cloud Memorystore Redis', 'BigQuery'];
+            components = ['Google Cloud DNS', 'Cloud Armor WAF', 'Cloud CDN', 'Cloud Run (Contenedores Serverless)', 'Cloud SQL Postgres', 'Cloud Memorystore Redis', 'BigQuery'];
             justification = 'Cloud Run ofrece el mejor cómputo serverless con 2 millones de peticiones gratuitas al mes y acceso privado a Cloud SQL y Redis.';
             targetPreset = 'gcp-enterprise-vpc';
         } else if (env === 'aws') {
             title = 'Arquitectura Empresarial AWS (VPC Multi-Subnet)';
             cost = '$65.00 / mes';
             scale = 'Alta concurrencia empresarial';
-            components = ['CloudFront & Route 53', 'Application Load Balancer', 'ECS Fargate', 'RDS Aurora PostgreSQL', 'DynamoDB'];
+            components = ['AWS Route 53', 'CloudFront', 'Application Load Balancer', 'ECS Fargate', 'RDS Aurora PostgreSQL', 'DynamoDB'];
             justification = 'Separa capas públicas y privadas siguiendo el Well-Architected Framework de AWS.';
             targetPreset = 'aws-microservices-vpc';
         } else {
@@ -2550,7 +2720,11 @@ ESTRUCTURA DE EVALUACIÓN (6 PILARES):
 
             const hasGcp = placedCanvasNodes.some(n => n.eco === 'gcp');
             const hasAws = placedCanvasNodes.some(n => n.eco === 'aws');
+            const hasCloudflare = placedCanvasNodes.some(n => n.componentId === 'cloudflare-dns' || n.componentId === 'cloudflare-workers' || n.componentId === 'cloudflare-r2');
 
+            if (hasCloudflare) {
+                tf += `# Cloudflare Provider (DNS & Zero-Trust)\nprovider "cloudflare" {\n  api_token = var.cloudflare_api_token\n}\n\n`;
+            }
             if (hasGcp) {
                 tf += `# Google Cloud Platform Provider\nprovider "google" {\n  project = var.gcp_project_id\n  region  = var.gcp_region\n}\n\n`;
             }
@@ -2559,7 +2733,13 @@ ESTRUCTURA DE EVALUACIÓN (6 PILARES):
             }
 
             placedCanvasNodes.forEach(n => {
-                if (n.componentId === 'gcp-cloudrun') {
+                if (n.componentId === 'cloudflare-dns') {
+                    tf += `resource "cloudflare_record" "${n.instanceId}_root" {\n  zone_id = var.cloudflare_zone_id\n  name    = "@"\n  value   = "192.0.2.1"\n  type    = "A"\n  proxied = true\n  ttl     = 1\n}\n\n`;
+                } else if (n.componentId === 'aws-route53') {
+                    tf += `resource "aws_route53_zone" "${n.instanceId}_primary" {\n  name = "app.mydomain.com"\n}\n\n`;
+                } else if (n.componentId === 'gcp-clouddns') {
+                    tf += `resource "google_dns_managed_zone" "${n.instanceId}_zone" {\n  name     = "app-zone"\n  dns_name = "app.mydomain.com."\n  dnssec_config { state = "on" }\n}\n\n`;
+                } else if (n.componentId === 'gcp-cloudrun') {
                     tf += `resource "google_cloud_run_v2_service" "${n.instanceId}" {\n  name     = "${n.instanceId}-service"\n  location = var.gcp_region\n  ingress  = "INGRESS_TRAFFIC_ALL"\n\n  template {\n    containers {\n      image = "us-docker.pkg.dev/\${var.gcp_project_id}/app/server:latest"\n      resources {\n        limits = { cpu = "1000m", memory = "512Mi" }\n      }\n    }\n  }\n}\n\n`;
                 } else if (n.componentId === 'gcp-cloudsql') {
                     tf += `resource "google_sql_database_instance" "${n.instanceId}" {\n  name             = "${n.instanceId}-pg"\n  database_version = "POSTGRES_15"\n  region           = var.gcp_region\n  settings {\n    tier = "db-f1-micro"\n    backup_configuration { enabled = true }\n  }\n}\n\n`;

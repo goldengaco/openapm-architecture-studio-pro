@@ -409,4 +409,34 @@ curl -Iv https://localhost:8080/api/health
 ```
 
 ---
+
+# MÓDULO 13: ESTRATEGIA DE DOMINIOS, DNS ANYCAST & REGISTRADORES A PRECIO DE COSTO (2026 Q4)
+
+### 1. Regla de Oro en la Compra de Dominios (FinOps Anti-Trampas)
+- **El Modelo de Trampa de Renovación (GoDaddy, Network Solutions)**: Ofrecen dominios a $0.99 o $1.99 el primer año, pero cobran entre **$22.99 y $34.99 por año en la renovación**, además de cobrar hasta **$9.99/año por privacidad WHOIS**.
+- **El Modelo Mayorista / At-Cost (Cloudflare Registrar & Porkbun)**:
+  - **Cloudflare Registrar**: Vende dominios al precio exacto de costo fijado por ICANN y el registro (ej. `.com` a **~$9.77/año** tanto en compra como en renovación). Privacidad WHOIS gratis de por vida, DNSSEC 1-clic y DNS Anycast global gratis.
+  - **Porkbun**: El registrador independiente con menores márgenes de la industria. Excelente para TLDs modernos (`.dev`, `.io`, `.ai`, `.xyz`) con soporte de API para automatización de certificados SSL Let's Encrypt.
+  - **Spaceship**: Plataforma de nueva generación con panel moderno y precios iniciales agresivos sin sobrecostos ocultos.
+
+### 2. DNS Anycast Global de Baja Latencia (<10ms)
+- **Cloudflare Free DNS**: 100% Gratuito. El sistema de resolución DNS Anycast más rápido y resiliente del planeta. Incluye protección DDoS ilimitada y WAF básico.
+- **AWS Route 53 ($0.50/zona alojada/mes)**: Imprescindible para arquitecturas complejas en AWS que requieren:
+  - **Latency-Based Routing (LBR)**: Redirige al usuario al datacenter con menor latencia de red.
+  - **Geoproximity / Geolocation Routing**: Cumplimiento normativo (GDPR / CCPA).
+  - **DNS Failover & Health Checks**: Conmutación automática a servidores de contingencia.
+- **Google Cloud DNS ($0.20/zona/mes)**: Respaldado por el 100% SLA de Google y zonas privadas para VPCs internas.
+
+### 3. Dynamic DNS (DDNS) para Servidores On-Premise & Homelabs
+- **DuckDNS (100% Gratuito)**:
+  - Permite vincular hasta 5 subdominios (`midominio.duckdns.org`) a conexiones residenciales con IP dinámica.
+  - Se actualiza automáticamente con un comando `curl` en cron cada 5 minutos:
+    ```bash
+    echo url="https://www.duckdns.org/update?domains=mi-homelab&token=TU_TOKEN_AQUI&ip=" | curl -k -o ~/duckdns/duck.log -K -
+    ```
+- **Cloudflare Zero-Trust Tunnels (Alternativa Superior a DDNS)**:
+  - Expone servidores locales a través de `cloudflared` hacia un dominio personalizado **sin abrir puertos en el router, sin NAT y sin requerir IP pública fija**.
+
+---
 *Manual generado y optimizado para Cloud & APM Architecture Studio Pro 2026.*
+
