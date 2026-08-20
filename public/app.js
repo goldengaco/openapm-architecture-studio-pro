@@ -1,5 +1,5 @@
 // Cloud & APM Architecture Studio Pro 2026 Q4
-// Ultra-High Performance Engine: 60/120 FPS rAF Rendering, Hardware-Accelerated Canvas, Multi-Provider AI (Gemini/Ollama/$0), FinOps Unit Economics, 1-Click Zero-Cost Optimizer & Universal IaC / Docker / K3s Exporter
+// Ultra-High Performance Engine: Multi-Theme Engine (6 Palettes), Sticky Notes & Annotations, 60/120 FPS rAF Rendering, Hardware-Accelerated Canvas, Multi-Provider AI (Gemini/Ollama/$0), FinOps Unit Economics, 1-Click Zero-Cost Optimizer & Universal IaC / Docker / K3s Exporter
 (function () {
     'use strict';
 
@@ -63,15 +63,20 @@ ESTRUCTURA DE EVALUACIÓN (6 PILARES):
     let placedCanvasNodes = []; // { instanceId, componentId, name, category, eco, icon, cost, quota, x, y }
     let placedCanvasZones = []; // { id, title, type, x, y, width, height }
     let activeConnections = []; // { id, fromInstanceId, toInstanceId, label }
+    let placedCanvasNotes = []; // { id, text, color, x, y, width, height }
+    let placedCanvasMarkers = []; // { id, num, text, x, y }
     
     let nextInstanceId = 1;
     let nextZoneId = 1;
     let nextConnId = 1;
+    let nextNoteId = 1;
+    let nextMarkerId = 1;
 
     let activeEcoFilter = 'all';
     let currentExportTab = 'mermaid';
     let currentAIProvider = 'gemini'; // 'gemini' | 'ollama' | 'heuristic'
     let lastGeneratedAITopology = null;
+    let currentTheme = 'default';
 
     // Canvas Pan & Zoom State (GPU rAF Scheduled)
     let zoomLevel = 1.0;
@@ -165,6 +170,46 @@ ESTRUCTURA DE EVALUACIÓN (6 PILARES):
     // -------------------------------------------------------------
     const ARCHITECTURE_PATTERNS_2026 = [
         {
+            id: 'pattern-ecommerce-pci',
+            title: '🛒 E-Commerce & Pagos de Alta Concurrencia (PCI-DSS & Stripe)',
+            badge: 'E-Commerce / PCI',
+            category: 'High-Throughput Commerce',
+            cost: '$0.00 Base / Pay-per-Sale',
+            desc: 'Topología para tiendas y pagos globales: Cloudflare Edge con WAF ➔ API Gateway Hono.js ➔ Kafka Queue para órdenes ➔ PostgreSQL Ledger con Redis Lock para inventario en tiempo real.',
+            stack: ['Cloudflare Edge', 'Hono.js', 'Kafka', 'PostgreSQL', 'Redis Lock', 'Stripe Webhooks'],
+            presetKey: 'e-commerce-pci'
+        },
+        {
+            id: 'pattern-mobile-sync',
+            title: '📱 Mobile Backend con Offline-Sync & Realtime',
+            badge: 'Mobile & Realtime',
+            category: 'Mobile Applications',
+            cost: '$0.00 / mes (Free Tier)',
+            desc: 'Backend reactivo para apps móviles (React Native / Flutter) con autenticación OAuth, suscripciones Realtime vía WebSockets en Supabase y base de datos local SQLite con réplicas Turso.',
+            stack: ['React Native', 'Supabase Realtime', 'Supabase Auth', 'Turso SQLite', 'Cloudflare R2'],
+            presetKey: 'mobile-sync-realtime'
+        },
+        {
+            id: 'pattern-gaming-ws',
+            title: '🎮 Gaming & Streaming WebSockets de Baja Latencia',
+            badge: 'Ultra-Low Latency',
+            category: 'Gaming & Media',
+            cost: '$0.00 Base / Edge Scaling',
+            desc: 'Servidores de juego multijugador y streaming interactivo con Cloudflare Durable Objects para estado en memoria en el Edge, Redis Pub/Sub para salas y ClickHouse para telemetría de juego.',
+            stack: ['Cloudflare Workers', 'Durable Objects', 'Redis Pub/Sub', 'Go Game Server', 'ClickHouse'],
+            presetKey: 'gaming-streaming-ws'
+        },
+        {
+            id: 'pattern-fintech-acid',
+            title: '🏦 Fintech & Banking Core ACID Transaccional',
+            badge: 'Fintech / ACID',
+            category: 'Financial Core',
+            cost: '$0.00 Cloud (Self-Hosted mTLS)',
+            desc: 'Núcleo bancario con Traefik mTLS de autenticación mutua, API de alto rendimiento en Rust/Go, orquestación de transacciones distribuidas con Temporal y PostgreSQL con aislamiento Serializable.',
+            stack: ['Traefik mTLS', 'Rust API', 'Temporal.io', 'PostgreSQL Serializable', 'MinIO WORM'],
+            presetKey: 'fintech-acid-core'
+        },
+        {
             id: 'pattern-onprem-enterprise',
             title: '🏢 Stack Empresarial On-Premise (Self-Hosted $0 Cloud Bill)',
             badge: 'Self-Hosted / $0 Cloud',
@@ -183,46 +228,6 @@ ESTRUCTURA DE EVALUACIÓN (6 PILARES):
             desc: 'Pipeline agéntico privado en servidores propios: Ollama corriendo Llama 3.3 / DeepSeek R1 ➔ Qdrant Vector DB para embeddings ➔ DuckDB para consultas OLAP sobre Parquet ➔ Open-WebUI.',
             stack: ['Ollama Local', 'Qdrant (Rust)', 'DuckDB', 'MinIO', 'Open-WebUI'],
             presetKey: 'onprem-private-ai'
-        },
-        {
-            id: 'pattern-rag-agentic',
-            title: '⚡ Agentic AI RAG Pipeline ($0 Local Ollama & Supabase pgvector)',
-            badge: 'AI & Zero-Cost',
-            category: 'AI & Data Engineering',
-            cost: '$0.00 / mes (Free Tier)',
-            desc: 'Arquitectura RAG híbrida con Embeddings vectoriales en Supabase Postgres, orquestación agéntica con Vercel AI SDK / Python y almacenamiento de chunks en Cloudflare R2 sin costo de salida.',
-            stack: ['TanStack Start', 'Hono.js', 'Supabase (pgvector)', 'Cloudflare R2', 'Ollama / Gemini Flash'],
-            presetKey: 'tanstack-hono-supabase'
-        },
-        {
-            id: 'pattern-edge-ssr',
-            title: '⚡ Global Edge SSR & Micro-APIs (TanStack Start + Hono.js + Turso)',
-            badge: 'Ultra-Fast Web',
-            category: 'Frontend & Fullstack',
-            cost: '$0.00 / mes (Free Tier)',
-            desc: 'Frontend con Server-Side Rendering distribuido globalmente, API en Web Standards ultra-rápida con Hono y base de datos SQLite distribuida en el edge con réplicas de lectura de baja latencia.',
-            stack: ['TanStack Start', 'Hono.js', 'Turso (LibSQL)', 'Cloudflare Workers', 'Vercel Edge'],
-            presetKey: 'tanstack-hono-supabase'
-        },
-        {
-            id: 'pattern-hybrid-edge',
-            title: '🌐 Stack Híbrido: Cloudflare Edge + Core On-Premise',
-            badge: 'Hybrid Cloud',
-            category: 'Hybrid & Network',
-            cost: '$0.00 / mes (Cloudflare Tunnel)',
-            desc: 'Frontend global ultra-rápido en Cloudflare Pages ($0) conectado a un backend PostgreSQL y almacenamiento MinIO en hardware local mediante Cloudflare Zero Trust Tunnels sin abrir puertos públicos.',
-            stack: ['Cloudflare Pages', 'Cloudflare Tunnel', 'Hono API', 'PostgreSQL On-Prem', 'MinIO'],
-            presetKey: 'hybrid-cloud-edge'
-        },
-        {
-            id: 'pattern-gcp-enterprise',
-            title: '🇬 Google Cloud (GCP) Enterprise Multi-Tier VPC (Prod Ready)',
-            badge: 'Enterprise Cloud',
-            category: 'Enterprise Cloud',
-            cost: '$24.50 - $65.00 / mes',
-            desc: 'Topología empresarial con subred pública de seguridad (Cloud Armor WAF + Cloud CDN), cómputo serverless Cloud Run con Serverless VPC Access, y subred privada de datos con Cloud SQL Postgres y Memorystore Redis.',
-            stack: ['Cloud Armor', 'Cloud CDN', 'Cloud Run', 'Cloud Tasks', 'Cloud SQL PG', 'Memorystore', 'BigQuery'],
-            presetKey: 'gcp-enterprise-vpc'
         }
     ];
 
@@ -230,6 +235,120 @@ ESTRUCTURA DE EVALUACIÓN (6 PILARES):
     // PRESET BLUEPRINTS
     // -------------------------------------------------------------
     const PRESETS = {
+        'e-commerce-pci': {
+            cost: '$0.00 Base (Pay-per-Sale)',
+            zones: [
+                { id: 'z_ecom_edge', title: 'Edge Ingress & WAF (Cloudflare / Traefik)', type: 'zerocost', x: 40, y: 70, width: 280, height: 420 },
+                { id: 'z_ecom_app', title: 'Checkout & Inventory Tier (ACID Locks)', type: 'zerocost', x: 370, y: 70, width: 300, height: 420 },
+                { id: 'z_ecom_data', title: 'Transactional Ledger & Event Queue', type: 'onprem', x: 720, y: 70, width: 300, height: 420 }
+            ],
+            nodes: [
+                { componentId: 'cloudflare-workers', x: 65, y: 130 },
+                { componentId: 'traefik', x: 65, y: 260 },
+                { componentId: 'hono', x: 400, y: 120 },
+                { componentId: 'upstash-redis', x: 400, y: 260 },
+                { componentId: 'postgresql-onprem', x: 750, y: 120 },
+                { componentId: 'rabbitmq', x: 750, y: 260 }
+            ],
+            connections: [
+                { from: 0, to: 2, label: 'Checkout HTTPS' },
+                { from: 2, to: 3, label: 'Distributed Lock' },
+                { from: 2, to: 4, label: 'SQL Ledger Write' },
+                { from: 2, to: 5, label: 'Publish Order Evt' }
+            ],
+            notes: [
+                { id: 'note_ecom_1', text: '🔒 **PCI-DSS Compliance**: Cero almacenamiento de números de tarjeta en la base de datos local. Usar tokens efímeros de Stripe / Adyen.', color: 'yellow', x: 370, y: 510, width: 300, height: 110 }
+            ],
+            markers: [
+                { id: 'mark_ecom_1', num: '1', text: 'Ingreso Seguro', x: 140, y: 40 },
+                { id: 'mark_ecom_2', num: '2', text: 'Lock & Deduplicación', x: 440, y: 40 },
+                { id: 'mark_ecom_3', num: '3', text: 'Asentamiento Contable', x: 780, y: 40 }
+            ]
+        },
+        'mobile-sync-realtime': {
+            cost: '$0.00 / mes (Free Tier 2026)',
+            zones: [
+                { id: 'z_mob_client', title: 'Mobile Clients (React Native / Flutter)', type: 'zerocost', x: 40, y: 80, width: 280, height: 380 },
+                { id: 'z_mob_realtime', title: 'Realtime Gateway & Auth Tier', type: 'zerocost', x: 370, y: 80, width: 300, height: 380 },
+                { id: 'z_mob_db', title: 'Distributed SQLite & Media Storage', type: 'zerocost', x: 720, y: 80, width: 300, height: 380 }
+            ],
+            nodes: [
+                { componentId: 'vercel', x: 65, y: 140 },
+                { componentId: 'sqlite-turso', x: 65, y: 270 },
+                { componentId: 'supabase', x: 400, y: 140 },
+                { componentId: 'cloudflare-workers', x: 400, y: 270 },
+                { componentId: 'cloudflare-r2', x: 750, y: 200 }
+            ],
+            connections: [
+                { from: 0, to: 2, label: 'WebSocket Sync' },
+                { from: 1, to: 2, label: 'LibSQL Pull/Push' },
+                { from: 2, to: 4, label: 'Media Chunks' }
+            ],
+            notes: [
+                { id: 'note_mob_1', text: '⚡ **Offline-First Sync**: El cliente escribe en SQLite local (Turso Embedded) y sincroniza automáticamente vía WebSockets al reconectar.', color: 'green', x: 370, y: 480, width: 300, height: 110 }
+            ]
+        },
+        'gaming-streaming-ws': {
+            cost: '$0.00 Base (Edge Scaling)',
+            zones: [
+                { id: 'z_game_edge', title: 'Edge Anycast & WebSocket Gateway', type: 'zerocost', x: 40, y: 80, width: 280, height: 380 },
+                { id: 'z_game_state', title: 'In-Memory Game State & PubSub', type: 'onprem', x: 370, y: 80, width: 300, height: 380 },
+                { id: 'z_game_telemetry', title: 'High-Volume OLAP Telemetry', type: 'onprem', x: 720, y: 80, width: 300, height: 380 }
+            ],
+            nodes: [
+                { componentId: 'cloudflare-workers', x: 65, y: 150 },
+                { componentId: 'upstash-redis', x: 400, y: 130 },
+                { componentId: 'traefik', x: 400, y: 260 },
+                { componentId: 'clickhouse', x: 750, y: 130 },
+                { componentId: 'grafana', x: 750, y: 260 }
+            ],
+            connections: [
+                { from: 0, to: 1, label: 'Room State WS' },
+                { from: 0, to: 2, label: 'UDP/TCP Proxy' },
+                { from: 1, to: 3, label: 'Batch Telemetry' },
+                { from: 4, to: 3, label: 'Live Dashboards' }
+            ]
+        },
+        'fintech-acid-core': {
+            cost: '$0.00 Cloud (Self-Hosted mTLS)',
+            zones: [
+                { id: 'z_fin_ingress', title: 'mTLS Security Boundary (Strict Ingress)', type: 'onprem', x: 40, y: 80, width: 280, height: 380 },
+                { id: 'z_fin_orch', title: 'Deterministic Transaction Orchestration', type: 'onprem', x: 370, y: 80, width: 300, height: 380 },
+                { id: 'z_fin_vault', title: 'Immutable Ledger & WORM Storage', type: 'onprem', x: 720, y: 80, width: 300, height: 380 }
+            ],
+            nodes: [
+                { componentId: 'traefik', x: 65, y: 180 },
+                { componentId: 'hono', x: 400, y: 140 },
+                { componentId: 'rabbitmq', x: 400, y: 270 },
+                { componentId: 'postgresql-onprem', x: 750, y: 140 },
+                { componentId: 'minio', x: 750, y: 270 }
+            ],
+            connections: [
+                { from: 0, to: 1, label: 'mTLS HTTPS' },
+                { from: 1, to: 3, label: 'Serializable SQL' },
+                { from: 1, to: 2, label: 'AMQP Outbox' },
+                { from: 3, to: 4, label: 'WAL Backup S3' }
+            ]
+        },
+        'healthcare-hipaa': {
+            cost: '$0.00 Cloud (Air-Gapped Vault)',
+            zones: [
+                { id: 'z_hipaa_dmz', title: 'Encrypted Perimeter (Zero-Trust)', type: 'onprem', x: 40, y: 80, width: 280, height: 380 },
+                { id: 'z_hipaa_app', title: 'Isolated PHI Processing Tier', type: 'onprem', x: 370, y: 80, width: 300, height: 380 },
+                { id: 'z_hipaa_vault', title: 'Encrypted at Rest PHI Vault & Audit', type: 'onprem', x: 720, y: 80, width: 300, height: 380 }
+            ],
+            nodes: [
+                { componentId: 'traefik', x: 65, y: 180 },
+                { componentId: 'hono', x: 400, y: 180 },
+                { componentId: 'postgresql-onprem', x: 750, y: 130 },
+                { componentId: 'minio', x: 750, y: 260 }
+            ],
+            connections: [
+                { from: 0, to: 1, label: 'TLS 1.3 Strict' },
+                { from: 1, to: 2, label: 'Column Encrypted' },
+                { from: 1, to: 3, label: 'WORM DICOM/PDF' }
+            ]
+        },
         'onprem-enterprise-stack': {
             cost: '$0.00 Cloud (Self-Hosted On-Premise)',
             zones: [
@@ -251,6 +370,14 @@ ESTRUCTURA DE EVALUACIÓN (6 PILARES):
                 { from: 1, to: 3, label: 'Postgres SQL' },
                 { from: 1, to: 2, label: 'AMQP Publish' },
                 { from: 1, to: 5, label: 'S3 API (MinIO)' }
+            ],
+            notes: [
+                { id: 'note_onprem_1', text: '🏢 **TCO Optimizado**: Servidor Ryzen 9 (64GB RAM) = $41.20 USD/mes de energía y amortización vs +$280 USD/mes en AWS.', color: 'blue', x: 370, y: 510, width: 300, height: 110 }
+            ],
+            markers: [
+                { id: 'mark_onprem_1', num: '1', text: 'SSL Let\'s Encrypt', x: 130, y: 40 },
+                { id: 'mark_onprem_2', num: '2', text: 'Microservicios Hono', x: 440, y: 40 },
+                { id: 'mark_onprem_3', num: '3', text: 'NVMe Storage', x: 790, y: 40 }
             ]
         },
         'onprem-private-ai': {
@@ -511,26 +638,6 @@ ESTRUCTURA DE EVALUACIÓN (6 PILARES):
                 { from: 1, to: 2, label: 'Batch Write' },
                 { from: 3, to: 2, label: 'SQL Query' }
             ]
-        },
-        'otel-lgtm': {
-            cost: '$0.00 OSS',
-            zones: [
-                { id: 'z_source', title: 'Sources & Instrumentation', type: 'onprem', x: 40, y: 100, width: 260, height: 360 },
-                { id: 'z_pipe', title: 'OTel Collector Pipeline', type: 'onprem', x: 350, y: 100, width: 280, height: 360 },
-                { id: 'z_dest', title: 'Grafana LGTM Stack', type: 'onprem', x: 690, y: 100, width: 360, height: 360 }
-            ],
-            nodes: [
-                { componentId: 'opentelemetry-collector', x: 380, y: 200 },
-                { componentId: 'tempo', x: 720, y: 140 },
-                { componentId: 'loki', x: 720, y: 240 },
-                { componentId: 'grafana', x: 720, y: 340 }
-            ],
-            connections: [
-                { from: 0, to: 1, label: 'OTLP Traces' },
-                { from: 0, to: 2, label: 'Loki Push' },
-                { from: 3, to: 1, label: 'Query Tempo' },
-                { from: 3, to: 2, label: 'Query Loki' }
-            ]
         }
     };
 
@@ -587,6 +694,7 @@ ESTRUCTURA DE EVALUACIÓN (6 PILARES):
     // INITIALIZATION
     // -------------------------------------------------------------
     document.addEventListener('DOMContentLoaded', async () => {
+        setupThemeEngine();
         setupNavigation();
         setupPalette();
         setupCanvasEngine();
@@ -604,6 +712,64 @@ ESTRUCTURA DE EVALUACIÓN (6 PILARES):
         await loadModelData();
         loadPreset('onprem-enterprise-stack');
     });
+
+    // -------------------------------------------------------------
+    // THEME ENGINE (6 CURATED PALETTES)
+    // -------------------------------------------------------------
+    function setupThemeEngine() {
+        const themeBtn = document.getElementById('btn-theme-selector');
+        const themeMenu = document.getElementById('theme-dropdown-menu');
+        const themeDot = document.getElementById('current-theme-dot');
+        const themeLabel = document.getElementById('current-theme-label');
+
+        const themeMeta = {
+            'default': { label: 'Studio Dark', color: '#38bdf8' },
+            'oled': { label: 'Midnight OLED', color: '#ffffff' },
+            'cyberpunk': { label: 'Cyberpunk Neon', color: '#e879f9' },
+            'dracula': { label: 'Dracula Pro', color: '#cba6f7' },
+            'ocean': { label: 'Deep Ocean', color: '#0284c7' },
+            'emerald': { label: 'Emerald Matrix', color: '#10b981' },
+            'light': { label: 'Clean Light', color: '#0284c7' }
+        };
+
+        function applyTheme(themeKey) {
+            currentTheme = themeKey;
+            if (themeKey === 'default') {
+                document.documentElement.removeAttribute('data-theme');
+            } else {
+                document.documentElement.setAttribute('data-theme', themeKey);
+            }
+            safeStorage.set('app_theme', themeKey);
+
+            const meta = themeMeta[themeKey] || themeMeta['default'];
+            if (themeLabel) themeLabel.textContent = meta.label + ' ▾';
+            if (themeDot) themeDot.style.background = meta.color;
+
+            document.querySelectorAll('.theme-option').forEach(opt => {
+                opt.classList.toggle('active', opt.getAttribute('data-set-theme') === themeKey);
+            });
+        }
+
+        const savedTheme = safeStorage.get('app_theme', 'default');
+        applyTheme(savedTheme);
+
+        if (themeBtn && themeMenu) {
+            themeBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                themeMenu.style.display = themeMenu.style.display === 'none' ? 'block' : 'none';
+            });
+
+            document.addEventListener('click', () => { themeMenu.style.display = 'none'; });
+
+            document.querySelectorAll('.theme-option').forEach(opt => {
+                opt.addEventListener('click', () => {
+                    const t = opt.getAttribute('data-set-theme');
+                    applyTheme(t);
+                    themeMenu.style.display = 'none';
+                });
+            });
+        }
+    }
 
     async function loadModelData() {
         try {
@@ -816,7 +982,7 @@ ESTRUCTURA DE EVALUACIÓN (6 PILARES):
 
         // Panning with Mouse Drag
         dropzone.addEventListener('mousedown', (e) => {
-            if (e.target.closest('.canvas-node') || e.target.closest('.canvas-zone-box') || e.target.closest('.conn-label-tag')) return;
+            if (e.target.closest('.canvas-node') || e.target.closest('.canvas-zone-box') || e.target.closest('.canvas-sticky-note') || e.target.closest('.canvas-step-marker') || e.target.closest('.conn-label-tag')) return;
             if (e.button === 1 || isSpacePressed || e.button === 0) {
                 isPanning = true;
                 panStartX = e.clientX - panX;
@@ -981,7 +1147,7 @@ ESTRUCTURA DE EVALUACIÓN (6 PILARES):
                     <button class="node-delete-btn" title="Eliminar nodo">✕</button>
                 </div>
                 <div class="node-footer">
-                    <span style="font-size: 0.65rem; color: var(--accent-emerald); font-weight: 700; font-family: monospace;">${escapeHtml(node.cost)}</span>
+                    <span style="font-size: 0.68rem; color: var(--accent-emerald); font-weight: 700; font-family: monospace;">${escapeHtml(node.cost)}</span>
                     <span style="font-size: 0.62rem; color: var(--text-dim);">${node.instanceId}</span>
                 </div>
                 <div class="node-ports-out" title="Arrastra hacia otro nodo para conectar (Data Out)"></div>
@@ -1004,8 +1170,8 @@ ESTRUCTURA DE EVALUACIÓN (6 PILARES):
                 isConnecting = true;
                 connectSourceNode = node;
                 connectStartPos = {
-                    x: node.x + 230,
-                    y: node.y + 40
+                    x: node.x + 245,
+                    y: node.y + 46
                 };
             });
 
@@ -1204,7 +1370,144 @@ ESTRUCTURA DE EVALUACIÓN (6 PILARES):
     }
 
     // -------------------------------------------------------------
-    // SVG CONNECTION CURVES (Batched Updates)
+    // STICKY NOTES & FLOW STEP MARKERS SYSTEM
+    // -------------------------------------------------------------
+    function renderCanvasNotes() {
+        const layer = document.getElementById('canvas-notes-layer');
+        if (!layer) return;
+        layer.innerHTML = '';
+        const frag = document.createDocumentFragment();
+
+        placedCanvasNotes.forEach(note => {
+            const noteDiv = document.createElement('div');
+            noteDiv.className = `canvas-sticky-note sticky-${note.color || 'yellow'}`;
+            noteDiv.id = note.id;
+            noteDiv.style.left = note.x + 'px';
+            noteDiv.style.top = note.y + 'px';
+            noteDiv.style.width = (note.width || 200) + 'px';
+            noteDiv.style.pointerEvents = 'auto';
+
+            noteDiv.innerHTML = `
+                <div class="sticky-header">
+                    <span class="btn-cycle-color" style="cursor:pointer;" title="Cambiar color">🎨 Color</span>
+                    <button class="node-delete-btn btn-del-note" title="Eliminar nota">✕</button>
+                </div>
+                <textarea class="sticky-content" placeholder="Escribe notas de arquitectura, SLAs o consideraciones de seguridad...">${escapeHtml(note.text || '')}</textarea>
+            `;
+
+            const txtArea = noteDiv.querySelector('.sticky-content');
+            txtArea.addEventListener('input', (e) => {
+                note.text = e.target.value;
+            });
+
+            const colors = ['yellow', 'blue', 'green', 'purple', 'rose'];
+            noteDiv.querySelector('.btn-cycle-color').addEventListener('click', (e) => {
+                e.stopPropagation();
+                const curIdx = colors.indexOf(note.color || 'yellow');
+                note.color = colors[(curIdx + 1) % colors.length];
+                renderCanvasNotes();
+            });
+
+            noteDiv.querySelector('.btn-del-note').addEventListener('click', (e) => {
+                e.stopPropagation();
+                placedCanvasNotes = placedCanvasNotes.filter(n => n.id !== note.id);
+                renderCanvasNotes();
+            });
+
+            // Dragging sticky note
+            let isDragging = false;
+            let startX, startY, initX, initY;
+            noteDiv.addEventListener('mousedown', (e) => {
+                if (e.target.tagName === 'TEXTAREA' || e.target.classList.contains('node-delete-btn') || e.target.classList.contains('btn-cycle-color')) return;
+                isDragging = true;
+                startX = e.clientX;
+                startY = e.clientY;
+                initX = note.x;
+                initY = note.y;
+
+                const onMove = (eM) => {
+                    if (!isDragging) return;
+                    note.x = Math.max(10, initX + (eM.clientX - startX) / zoomLevel);
+                    note.y = Math.max(10, initY + (eM.clientY - startY) / zoomLevel);
+                    noteDiv.style.left = note.x + 'px';
+                    noteDiv.style.top = note.y + 'px';
+                };
+                const onUp = () => {
+                    isDragging = false;
+                    window.removeEventListener('mousemove', onMove);
+                    window.removeEventListener('mouseup', onUp);
+                };
+                window.addEventListener('mousemove', onMove, { passive: true });
+                window.addEventListener('mouseup', onUp);
+            });
+
+            frag.appendChild(noteDiv);
+        });
+
+        // Markers
+        placedCanvasMarkers.forEach(mark => {
+            const mDiv = document.createElement('div');
+            mDiv.className = 'canvas-step-marker';
+            mDiv.id = mark.id;
+            mDiv.style.left = mark.x + 'px';
+            mDiv.style.top = mark.y + 'px';
+            mDiv.style.pointerEvents = 'auto';
+
+            mDiv.innerHTML = `
+                <span class="step-num">${escapeHtml(mark.num || '1')}</span>
+                <span class="step-text" title="Doble clic para editar">${escapeHtml(mark.text || 'Paso')}</span>
+                <button class="node-delete-btn btn-del-mark" style="font-size:0.65rem; margin-left:2px;">✕</button>
+            `;
+
+            mDiv.querySelector('.step-text').addEventListener('dblclick', () => {
+                const newT = prompt('Editar texto del marcador:', mark.text);
+                if (newT) {
+                    mark.text = escapeHtml(newT.trim());
+                    renderCanvasNotes();
+                }
+            });
+
+            mDiv.querySelector('.btn-del-mark').addEventListener('click', (e) => {
+                e.stopPropagation();
+                placedCanvasMarkers = placedCanvasMarkers.filter(m => m.id !== mark.id);
+                renderCanvasNotes();
+            });
+
+            // Dragging marker
+            let isDragging = false;
+            let startX, startY, initX, initY;
+            mDiv.addEventListener('mousedown', (e) => {
+                if (e.target.classList.contains('node-delete-btn')) return;
+                isDragging = true;
+                startX = e.clientX;
+                startY = e.clientY;
+                initX = mark.x;
+                initY = mark.y;
+
+                const onMove = (eM) => {
+                    if (!isDragging) return;
+                    mark.x = Math.max(10, initX + (eM.clientX - startX) / zoomLevel);
+                    mark.y = Math.max(10, initY + (eM.clientY - startY) / zoomLevel);
+                    mDiv.style.left = mark.x + 'px';
+                    mDiv.style.top = mark.y + 'px';
+                };
+                const onUp = () => {
+                    isDragging = false;
+                    window.removeEventListener('mousemove', onMove);
+                    window.removeEventListener('mouseup', onUp);
+                };
+                window.addEventListener('mousemove', onMove, { passive: true });
+                window.addEventListener('mouseup', onUp);
+            });
+
+            frag.appendChild(mDiv);
+        });
+
+        layer.appendChild(frag);
+    }
+
+    // -------------------------------------------------------------
+    // SVG CONNECTION CURVES (Batched Updates & Animated Flow)
     // -------------------------------------------------------------
     function renderCanvasConnections() {
         const svgGroup = document.getElementById('svg-paths-group');
@@ -1213,8 +1516,8 @@ ESTRUCTURA DE EVALUACIÓN (6 PILARES):
         // Remove old DOM label tags
         document.querySelectorAll('.conn-label-tag').forEach(el => el.remove());
 
-        const nodeW = 230;
-        const nodeH = 85;
+        const nodeW = 245;
+        const nodeH = 92;
         const transformWrapper = document.getElementById('canvas-transform-wrapper');
         const frag = document.createDocumentFragment();
 
@@ -1235,6 +1538,7 @@ ESTRUCTURA DE EVALUACIÓN (6 PILARES):
 
             const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
             path.setAttribute('d', d);
+            path.setAttribute('class', 'data-flow-pulse');
             path.setAttribute('marker-end', 'url(#arrowhead)');
             svgGroup.appendChild(path);
 
@@ -1342,7 +1646,7 @@ ESTRUCTURA DE EVALUACIÓN (6 PILARES):
     }
 
     // -------------------------------------------------------------
-    // PRESETS LOADING & AI PROMPT HUB
+    // PRESETS LOADING & TOOLBAR BUTTONS
     // -------------------------------------------------------------
     function setupCanvasToolbar() {
         const btnPresets = document.getElementById('btn-presets');
@@ -1369,12 +1673,49 @@ ESTRUCTURA DE EVALUACIÓN (6 PILARES):
             btnOptimize.addEventListener('click', optimizeCanvasToLowCostOrOnPrem);
         }
 
+        // Add Sticky Note Button
+        const btnAddNote = document.getElementById('btn-add-sticky-note');
+        if (btnAddNote) {
+            btnAddNote.addEventListener('click', () => {
+                const note = {
+                    id: 'note_' + nextNoteId++,
+                    text: '📝 Nota de Arquitectura (SLA 99.99%, RPO < 1min)',
+                    color: 'yellow',
+                    x: 100 + Math.random() * 150,
+                    y: 120 + Math.random() * 100,
+                    width: 210
+                };
+                placedCanvasNotes.push(note);
+                renderCanvasNotes();
+            });
+        }
+
+        // Add Step Marker Button
+        const btnAddMarker = document.getElementById('btn-add-step-marker');
+        if (btnAddMarker) {
+            btnAddMarker.addEventListener('click', () => {
+                const text = prompt('Etiqueta del paso (ej: Ingress SSL, Rate Limit, Auth, SQL Write):', 'Paso de Flujo') || 'Paso';
+                const marker = {
+                    id: 'marker_' + nextMarkerId++,
+                    num: String(placedCanvasMarkers.length + 1),
+                    text: escapeHtml(text.trim()),
+                    x: 120 + (placedCanvasMarkers.length * 80),
+                    y: 40
+                };
+                placedCanvasMarkers.push(marker);
+                renderCanvasNotes();
+            });
+        }
+
         document.getElementById('btn-clear-canvas').addEventListener('click', () => {
             placedCanvasNodes = [];
             placedCanvasZones = [];
             activeConnections = [];
+            placedCanvasNotes = [];
+            placedCanvasMarkers = [];
             renderCanvasZones();
             renderCanvasNodes();
+            renderCanvasNotes();
             requestConnectionsUpdate();
             updateCostHUD();
         });
@@ -1402,28 +1743,6 @@ ESTRUCTURA DE EVALUACIÓN (6 PILARES):
             renderCanvasNodes();
             requestConnectionsUpdate();
         });
-
-        // AI Prompt Studio Hub: Chips & Toggle
-        document.querySelectorAll('.hub-chips-row .prompt-chip').forEach(chip => {
-            chip.addEventListener('click', () => {
-                const presetKey = chip.getAttribute('data-preset');
-                loadPreset(presetKey);
-            });
-        });
-
-        const toggleBtn = document.getElementById('btn-toggle-hub');
-        if (toggleBtn) {
-            toggleBtn.addEventListener('click', () => {
-                const area = document.getElementById('hub-input-area');
-                if (area.style.display === 'none') {
-                    area.style.display = 'flex';
-                    toggleBtn.textContent = '▾';
-                } else {
-                    area.style.display = 'none';
-                    toggleBtn.textContent = '▴';
-                }
-            });
-        }
 
         // Quick Prompt generation
         const quickPrompt = document.getElementById('canvas-quick-prompt');
@@ -1466,20 +1785,28 @@ ESTRUCTURA DE EVALUACIÓN (6 PILARES):
 
             // Fallback to Heuristic Match
             const qLower = q.toLowerCase();
-            if (qLower.includes('on-prem') || qLower.includes('self-hosted') || qLower.includes('minio') || qLower.includes('traefik')) {
+            if (qLower.includes('ecommerce') || qLower.includes('pci') || qLower.includes('tienda') || qLower.includes('stripe')) {
+                loadPreset('e-commerce-pci');
+            } else if (qLower.includes('mobile') || qLower.includes('flutter') || qLower.includes('sync') || qLower.includes('offline')) {
+                loadPreset('mobile-sync-realtime');
+            } else if (qLower.includes('game') || qLower.includes('gaming') || qLower.includes('websocket')) {
+                loadPreset('gaming-streaming-ws');
+            } else if (qLower.includes('fintech') || qLower.includes('bank') || qLower.includes('acid') || qLower.includes('temporal')) {
+                loadPreset('fintech-acid-core');
+            } else if (qLower.includes('health') || qLower.includes('hipaa') || qLower.includes('salud')) {
+                loadPreset('healthcare-hipaa');
+            } else if (qLower.includes('on-prem') || qLower.includes('self-hosted') || qLower.includes('minio') || qLower.includes('traefik')) {
                 loadPreset('onprem-enterprise-stack');
             } else if (qLower.includes('private ai') || qLower.includes('ollama') || qLower.includes('qdrant') || qLower.includes('local ai')) {
                 loadPreset('onprem-private-ai');
             } else if (qLower.includes('tunnel') || qLower.includes('hybrid') || qLower.includes('híbrido')) {
                 loadPreset('hybrid-cloud-edge');
-            } else if (qLower.includes('gcp') && (qLower.includes('enterprise') || qLower.includes('vpc') || qLower.includes('sql') || qLower.includes('armor'))) {
+            } else if (qLower.includes('gcp')) {
                 loadPreset('gcp-enterprise-vpc');
             } else if (qLower.includes('tanstack') || qLower.includes('hono') || qLower.includes('start')) {
                 loadPreset('tanstack-hono-supabase');
-            } else if (qLower.includes('aws') && (qLower.includes('analytics') || qLower.includes('serverless') || qLower.includes('kinesis') || qLower.includes('athena'))) {
+            } else if (qLower.includes('aws')) {
                 loadPreset('aws-serverless-analytics');
-            } else if (qLower.includes('duckdb') || qLower.includes('analytics')) {
-                loadPreset('zero-cost-analytics');
             } else {
                 loadPreset('zero-cost-fullstack');
             }
@@ -1503,6 +1830,8 @@ ESTRUCTURA DE EVALUACIÓN (6 PILARES):
     function applyTopologyToCanvas(topology) {
         if (!topology) return;
         placedCanvasZones = topology.zones || [];
+        placedCanvasNotes = topology.notes || [];
+        placedCanvasMarkers = topology.markers || [];
         placedCanvasNodes = (topology.nodes || []).map(n => {
             const svc = CLOUD_SERVICES.find(s => s.id === n.componentId) || { name: n.componentId, category: 'Service', eco: 'serverless', cost: '$0.00', quota: 'Free Tier', icon: '📦' };
             return {
@@ -1537,6 +1866,7 @@ ESTRUCTURA DE EVALUACIÓN (6 PILARES):
 
         renderCanvasZones();
         renderCanvasNodes();
+        renderCanvasNotes();
         requestConnectionsUpdate();
         document.getElementById('cost-estimate-val').textContent = topology.estimatedCost || '$0.00 / mes';
         document.getElementById('tab-canvas-view').click();
@@ -1652,6 +1982,7 @@ ESTRUCTURA DE EVALUACIÓN (6 PILARES):
         const architectureSummary = {
             nodos: placedCanvasNodes.map(n => `${n.name} (${n.category}, ${n.eco}, Cuota: ${n.quota})`),
             zonas: placedCanvasZones.map(z => z.title),
+            notas: placedCanvasNotes.map(n => n.text),
             conexiones: activeConnections.map(c => {
                 const s = placedCanvasNodes.find(n => n.instanceId === c.fromInstanceId);
                 const t = placedCanvasNodes.find(n => n.instanceId === c.toInstanceId);
@@ -1721,7 +2052,7 @@ ESTRUCTURA DE EVALUACIÓN (6 PILARES):
             report += '🔍 RESULTADOS DE AUDITORÍA DE ARQUITECTURA (MASTER FRAMEWORK 2026):\n\n';
             const hasAlb = placedCanvasNodes.some(n => n.componentId === 'aws-alb' || n.componentId === 'azure-frontdoor' || n.componentId === 'gcp-cloudcdn' || n.componentId === 'gcp-cloudarmor' || n.componentId === 'traefik');
             const hasDB = placedCanvasNodes.some(n => n.category.includes('Database') || n.category.includes('SQL'));
-            const hasQueue = placedCanvasNodes.some(n => n.category.includes('Queue') || n.category.includes('Streaming') || n.componentId === 'gcp-cloudtasks' || n.componentId === 'rabbitmq');
+            const hasQueue = placedCanvasNodes.some(n => n.category.includes('Queue') || n.category.includes('Streaming') || n.componentId === 'gcp-cloudtasks' || n.componentId === 'rabbitmq' || n.componentId === 'kafka');
 
             if (!hasAlb && placedCanvasNodes.length > 2) {
                 report += '⚠️ [SPOF CRÍTICO]: No hay un WAF / Load Balancer frontal (Traefik / Cloud Armor). Las peticiones van directo al cómputo.\n';
@@ -1734,7 +2065,7 @@ ESTRUCTURA DE EVALUACIÓN (6 PILARES):
             }
 
             if (!hasQueue && placedCanvasNodes.length > 4) {
-                report += '💡 [DESACOPLAMIENTO]: Agrega colas asíncronas (RabbitMQ / Cloud Tasks) para absorber picos de tráfico sin saturar la base de datos.\n';
+                report += '💡 [DESACOPLAMIENTO]: Agrega colas asíncronas (RabbitMQ / Kafka / Cloud Tasks) para absorber picos de tráfico sin saturar la base de datos.\n';
             }
         } else {
             report += '💰 RECOMENDACIONES FINOPS, ZERO-COST & ON-PREMISE 2026 Q4:\n\n';
@@ -2038,6 +2369,8 @@ ESTRUCTURA DE EVALUACIÓN (6 PILARES):
                 nodes: placedCanvasNodes,
                 zones: placedCanvasZones,
                 connections: activeConnections,
+                notes: placedCanvasNotes,
+                markers: placedCanvasMarkers,
                 updatedAt: new Date().toISOString()
             };
 
@@ -2066,6 +2399,8 @@ ESTRUCTURA DE EVALUACIÓN (6 PILARES):
                 nodes: placedCanvasNodes,
                 zones: placedCanvasZones,
                 connections: activeConnections,
+                notes: placedCanvasNotes,
+                markers: placedCanvasMarkers,
                 exportedAt: new Date().toISOString()
             };
             const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
@@ -2303,7 +2638,7 @@ ESTRUCTURA DE EVALUACIÓN (6 PILARES):
         } else if (currentExportTab === 'github-ci') {
             codeElement.textContent = `name: Production CI/CD Pipeline 2026\non:\n  push:\n    branches: [main]\n\njobs:\n  deploy:\n    runs-on: ubuntu-latest\n    steps:\n      - name: Checkout repository\n        uses: actions/checkout@v4\n\n      - name: Setup OpenTofu\n        uses: opentofu/setup-opentofu@v1\n\n      - name: OpenTofu Init & Apply\n        run: |\n          tofu init\n          tofu apply -auto-approve`;
         } else {
-            codeElement.textContent = JSON.stringify({ title: "Architecture Blueprint", version: "2026.4", nodes: placedCanvasNodes, zones: placedCanvasZones, connections: activeConnections }, null, 2);
+            codeElement.textContent = JSON.stringify({ title: "Architecture Blueprint", version: "2026.4", nodes: placedCanvasNodes, zones: placedCanvasZones, connections: activeConnections, notes: placedCanvasNotes, markers: placedCanvasMarkers }, null, 2);
         }
     }
 
@@ -2323,8 +2658,8 @@ ESTRUCTURA DE EVALUACIÓN (6 PILARES):
         nodes.forEach(n => {
             minX = Math.min(minX, n.x);
             minY = Math.min(minY, n.y);
-            maxX = Math.max(maxX, n.x + 240);
-            maxY = Math.max(maxY, n.y + 100);
+            maxX = Math.max(maxX, n.x + 260);
+            maxY = Math.max(maxY, n.y + 110);
         });
         zones.forEach(z => {
             minX = Math.min(minX, z.x);
@@ -2343,20 +2678,18 @@ ESTRUCTURA DE EVALUACIÓN (6 PILARES):
         const ctx = canvas.getContext('2d');
         ctx.scale(2, 2);
 
-        // Dark Background
-        ctx.fillStyle = '#060911';
+        // Background based on current theme
+        ctx.fillStyle = currentTheme === 'light' ? '#f8fafc' : (currentTheme === 'oled' ? '#000000' : '#060911');
         ctx.fillRect(0, 0, width, height);
 
         // Zones
         zones.forEach(z => {
             const zx = z.x - minX + padding;
             const zy = z.y - minY + padding;
-            ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
-            ctx.setLineDash([6, 4]);
-            ctx.fillStyle = 'rgba(255, 255, 255, 0.02)';
+            ctx.strokeStyle = currentTheme === 'light' ? 'rgba(15, 23, 42, 0.2)' : 'rgba(255, 255, 255, 0.2)';
+            ctx.fillStyle = currentTheme === 'light' ? 'rgba(2, 132, 199, 0.03)' : 'rgba(255, 255, 255, 0.02)';
             ctx.fillRect(zx, zy, z.width, z.height);
             ctx.strokeRect(zx, zy, z.width, z.height);
-            ctx.setLineDash([]);
 
             ctx.fillStyle = '#38bdf8';
             ctx.font = 'bold 11px sans-serif';
@@ -2369,10 +2702,10 @@ ESTRUCTURA DE EVALUACIÓN (6 PILARES):
             const t = nodes.find(n => n.instanceId === c.toInstanceId);
             if (!s || !t) return;
 
-            const x1 = s.x + 230 - minX + padding;
-            const y1 = s.y + 42 - minY + padding;
+            const x1 = s.x + 245 - minX + padding;
+            const y1 = s.y + 46 - minY + padding;
             const x2 = t.x - minX + padding;
-            const y2 = t.y + 42 - minY + padding;
+            const y2 = t.y + 46 - minY + padding;
 
             ctx.strokeStyle = '#38bdf8';
             ctx.lineWidth = 2.2;
@@ -2395,13 +2728,13 @@ ESTRUCTURA DE EVALUACIÓN (6 PILARES):
             const nx = n.x - minX + padding;
             const ny = n.y - minY + padding;
 
-            ctx.fillStyle = 'rgba(20, 28, 46, 0.96)';
-            ctx.strokeStyle = 'rgba(255, 255, 255, 0.12)';
+            ctx.fillStyle = currentTheme === 'light' ? 'rgba(255, 255, 255, 0.98)' : 'rgba(20, 28, 46, 0.96)';
+            ctx.strokeStyle = currentTheme === 'light' ? 'rgba(15, 23, 42, 0.15)' : 'rgba(255, 255, 255, 0.12)';
             ctx.lineWidth = 1;
-            ctx.fillRect(nx, ny, 230, 85);
-            ctx.strokeRect(nx, ny, 230, 85);
+            ctx.fillRect(nx, ny, 245, 92);
+            ctx.strokeRect(nx, ny, 245, 92);
 
-            ctx.fillStyle = '#f1f5f9';
+            ctx.fillStyle = currentTheme === 'light' ? '#0f172a' : '#f1f5f9';
             ctx.font = 'bold 12px sans-serif';
             ctx.fillText(n.name, nx + 38, ny + 26);
 
@@ -2411,7 +2744,21 @@ ESTRUCTURA DE EVALUACIÓN (6 PILARES):
 
             ctx.fillStyle = '#10b981';
             ctx.font = 'bold 10px monospace';
-            ctx.fillText(`${n.cost} • ${n.quota || ''}`, nx + 12, ny + 72);
+            ctx.fillText(`${n.cost} • ${n.quota || ''}`, nx + 12, ny + 76);
+        });
+
+        // Notes
+        placedCanvasNotes.forEach(note => {
+            const noteX = note.x - minX + padding;
+            const noteY = note.y - minY + padding;
+            ctx.fillStyle = '#fef08a';
+            ctx.strokeStyle = '#fde047';
+            ctx.fillRect(noteX, noteY, 200, 110);
+            ctx.strokeRect(noteX, noteY, 200, 110);
+
+            ctx.fillStyle = '#713f12';
+            ctx.font = '10px sans-serif';
+            ctx.fillText(note.text.substring(0, 50), noteX + 10, noteY + 25);
         });
 
         const a = document.createElement('a');
@@ -2429,6 +2776,8 @@ ESTRUCTURA DE EVALUACIÓN (6 PILARES):
                 document.querySelectorAll('.modal-backdrop').forEach(m => m.style.display = 'none');
                 const menu = document.getElementById('presets-menu');
                 if (menu) menu.style.display = 'none';
+                const tMenu = document.getElementById('theme-dropdown-menu');
+                if (tMenu) tMenu.style.display = 'none';
                 return;
             }
 
