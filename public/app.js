@@ -24,7 +24,7 @@ ESTRUCTURA DE EVALUACIÓN (6 PILARES):
 6. 📐 ESQUEMA JSON DE TOPOLOGÍA: Emisión de JSON con { zones: [...], nodes: [...], connections: [...] } para renderizado visual directo.`;
 
     // -------------------------------------------------------------
-    // UTILITIES: SAFE STORAGE, DEBOUNCE & ESCAPING
+    // UTILITIES: TOASTS, SAFE STORAGE, DEBOUNCE & ESCAPING
     // -------------------------------------------------------------
     const safeStorage = {
         get(key, fallback = null) {
@@ -37,6 +37,21 @@ ESTRUCTURA DE EVALUACIÓN (6 PILARES):
             try { localStorage.removeItem(key); } catch (e) {}
         }
     };
+
+    function showToast(msg, type = 'info', duration = 3000) {
+        const container = document.getElementById('toast-container');
+        if (!container) return;
+        const item = document.createElement('div');
+        item.className = `toast-item toast-${type}`;
+        const icons = { success: '✅', warning: '⚠️', error: '❌', info: 'ℹ️' };
+        item.innerHTML = `<span>${icons[type] || 'ℹ️'}</span><span>${escapeHtml(msg)}</span>`;
+        container.appendChild(item);
+        setTimeout(() => {
+            item.style.opacity = '0';
+            item.style.transform = 'translateY(10px) scale(0.95)';
+            setTimeout(() => item.remove(), 250);
+        }, duration);
+    }
 
     function debounce(fn, wait = 100) {
         let timeout;
@@ -57,7 +72,7 @@ ESTRUCTURA DE EVALUACIÓN (6 PILARES):
     }
 
     // -------------------------------------------------------------
-    // STATE
+    // STATE & HISTORY (UNDO / REDO / AUTO-SAVE ENGINE)
     // -------------------------------------------------------------
     let modelData = { components: [], categories: [], licenses: {} };
     let placedCanvasNodes = []; // { instanceId, componentId, name, category, eco, icon, cost, quota, x, y }
@@ -74,9 +89,15 @@ ESTRUCTURA DE EVALUACIÓN (6 PILARES):
 
     let activeEcoFilter = 'all';
     let currentExportTab = 'mermaid';
-    let currentAIProvider = 'gemini'; // 'gemini' | 'ollama' | 'heuristic'
+    let currentAIProvider = 'gemini'; // 'gemini' | 'groq' | 'openrouter' | 'ollama' | 'heuristic'
     let lastGeneratedAITopology = null;
     let currentTheme = 'default';
+
+    // Undo / Redo Stack State
+    let historyStack = [];
+    let redoStack = [];
+    const MAX_HISTORY = 35;
+    let isRestoringHistory = false;
 
     // Canvas Pan & Zoom State (GPU rAF Scheduled)
     let zoomLevel = 1.0;
@@ -94,6 +115,80 @@ ESTRUCTURA DE EVALUACIÓN (6 PILARES):
     let connectStartPos = { x: 0, y: 0 };
     let tempPathRafId = null;
     let connectionsRafId = null;
+
+    function snapshotCanvasState() {
+        return JSON.stringify({
+            nodes: placedCanvasNodes,
+            zones: placedCanvasZones,
+            connections: activeConnections,
+            notes: placedCanvasNotes,
+            markers: placedCanvasMarkers,
+            estimatedCost: document.getElementById('cost-estimate-val') ? document.getElementById('cost-estimate-val').textContent : '$0.00 / mes'
+        });
+    }
+
+    const triggerAutoSave = debounce(() => {
+        const snap = snapshotCanvasState();
+        safeStorage.set('current_canvas_session', snap);
+        const indicator = document.getElementById('autosave-text');
+        if (indicator) {
+            indicator.textContent = 'Guardado ✓';
+            setTimeout(() => {
+                if (indicator) indicator.textContent = 'Auto-Guardado';
+            }, 1500);
+        }
+    }, 250);
+
+    function recordCanvasState(saveToSession = true) {
+        if (isRestoringHistory) return;
+        const snap = snapshotCanvasState();
+        if (historyStack.length > 0 && historyStack[historyStack.length - 1] === snap) return;
+        historyStack.push(snap);
+        if (historyStack.length > MAX_HISTORY) historyStack.shift();
+        redoStack = [];
+        updateUndoRedoUI();
+        if (saveToSession) triggerAutoSave();
+    }
+
+    function undo() {
+        if (historyStack.length <= 1) return;
+        const current = historyStack.pop();
+        redoStack.push(current);
+        const prev = historyStack[historyStack.length - 1];
+        if (prev) {
+            isRestoringHistory = true;
+            try {
+                const data = JSON.parse(prev);
+                applyTopologyToCanvas(data, false);
+                showToast('Acción deshecha (Ctrl+Z)', 'info', 1500);
+            } catch (e) {}
+            isRestoringHistory = false;
+        }
+        updateUndoRedoUI();
+        triggerAutoSave();
+    }
+
+    function redo() {
+        if (redoStack.length === 0) return;
+        const next = redoStack.pop();
+        historyStack.push(next);
+        isRestoringHistory = true;
+        try {
+            const data = JSON.parse(next);
+            applyTopologyToCanvas(data, false);
+            showToast('Acción rehecha (Ctrl+Y)', 'info', 1500);
+        } catch (e) {}
+        isRestoringHistory = false;
+        updateUndoRedoUI();
+        triggerAutoSave();
+    }
+
+    function updateUndoRedoUI() {
+        const btnUndo = document.getElementById('btn-undo');
+        const btnRedo = document.getElementById('btn-redo');
+        if (btnUndo) btnUndo.disabled = (historyStack.length <= 1);
+        if (btnRedo) btnRedo.disabled = (redoStack.length === 0);
+    }
 
     // -------------------------------------------------------------
     // MULTI-CLOUD, ZERO-COST & ON-PREMISE SERVICE CATALOG 2026
@@ -817,7 +912,24 @@ ESTRUCTURA DE EVALUACIÓN (6 PILARES):
         setupKeyboardShortcuts();
 
         await loadModelData();
-        loadPreset('onprem-enterprise-stack');
+
+        const savedSession = safeStorage.get('current_canvas_session');
+        if (savedSession) {
+            try {
+                const parsed = JSON.parse(savedSession);
+                if (parsed && ((parsed.nodes && parsed.nodes.length > 0) || (parsed.zones && parsed.zones.length > 0))) {
+                    applyTopologyToCanvas(parsed, false);
+                    showToast('Sesión de trabajo restaurada automáticamente', 'info', 2500);
+                } else {
+                    loadPreset('onprem-enterprise-stack');
+                }
+            } catch (e) {
+                loadPreset('onprem-enterprise-stack');
+            }
+        } else {
+            loadPreset('onprem-enterprise-stack');
+        }
+        recordCanvasState();
     });
 
     // -------------------------------------------------------------
@@ -1210,12 +1322,7 @@ ESTRUCTURA DE EVALUACIÓN (6 PILARES):
             zoomLevel = Math.max(0.4, zoomLevel * 0.85);
             requestTransformUpdate();
         });
-        document.getElementById('btn-zoom-reset').addEventListener('click', () => {
-            zoomLevel = 1.0;
-            panX = 0;
-            panY = 0;
-            requestTransformUpdate();
-        });
+        document.getElementById('btn-zoom-reset').addEventListener('click', resetZoomAndFitView);
 
         // Drop from palette
         dropzone.addEventListener('dragover', (e) => {
@@ -1257,6 +1364,51 @@ ESTRUCTURA DE EVALUACIÓN (6 PILARES):
         });
     }
 
+    function resetZoomAndFitView() {
+        if (placedCanvasNodes.length === 0 && placedCanvasZones.length === 0) {
+            zoomLevel = 1.0;
+            panX = 0;
+            panY = 0;
+            requestTransformUpdate();
+            showToast('Lienzo centrado', 'info', 1500);
+            return;
+        }
+
+        let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+        placedCanvasNodes.forEach(n => {
+            if (n.x < minX) minX = n.x;
+            if (n.y < minY) minY = n.y;
+            if (n.x + 250 > maxX) maxX = n.x + 250;
+            if (n.y + 110 > maxY) maxY = n.y + 110;
+        });
+        placedCanvasZones.forEach(z => {
+            if (z.x < minX) minX = z.x;
+            if (z.y < minY) minY = z.y;
+            if (z.x + z.width > maxX) maxX = z.x + z.width;
+            if (z.y + z.height > maxY) maxY = z.y + z.height;
+        });
+
+        const dropzone = document.getElementById('canvas-dropzone');
+        const cw = dropzone ? dropzone.clientWidth : 1200;
+        const ch = dropzone ? dropzone.clientHeight : 800;
+
+        const bbW = Math.max(400, maxX - minX + 160);
+        const bbH = Math.max(300, maxY - minY + 160);
+
+        const scaleX = cw / bbW;
+        const scaleY = ch / bbH;
+        zoomLevel = Math.min(1.2, Math.max(0.4, Math.min(scaleX, scaleY)));
+
+        const midX = (minX + maxX) / 2;
+        const midY = (minY + maxY) / 2;
+
+        panX = (cw / 2) - (midX * zoomLevel);
+        panY = (ch / 2) - (midY * zoomLevel);
+
+        requestTransformUpdate();
+        showToast('Lienzo ajustado a pantalla (Fit View)', 'info', 1500);
+    }
+
     function addServiceNodeToCanvas(serviceId, x, y) {
         const svc = CLOUD_SERVICES.find(s => s.id === serviceId) || { name: serviceId, category: 'Service', eco: 'serverless', cost: '$0.00', quota: 'Custom', icon: '📦' };
 
@@ -1277,6 +1429,7 @@ ESTRUCTURA DE EVALUACIÓN (6 PILARES):
         renderCanvasNodes();
         requestConnectionsUpdate();
         updateCostHUD();
+        recordCanvasState();
     }
 
     function renderCanvasNodes() {
@@ -1328,6 +1481,7 @@ ESTRUCTURA DE EVALUACIÓN (6 PILARES):
                 renderCanvasNodes();
                 requestConnectionsUpdate();
                 updateCostHUD();
+                recordCanvasState();
             });
 
             // Interactive Port Dragging
@@ -1356,6 +1510,7 @@ ESTRUCTURA DE EVALUACIÓN (6 PILARES):
                     isConnecting = false;
                     document.getElementById('svg-drawing-temp-path').style.display = 'none';
                     requestConnectionsUpdate();
+                    recordCanvasState();
                 }
             });
 
@@ -1401,10 +1556,13 @@ ESTRUCTURA DE EVALUACIÓN (6 PILARES):
             };
 
             const onMouseUp = () => {
-                isDragging = false;
-                card.classList.remove('dragging-node');
-                window.removeEventListener('mousemove', onMouseMove);
-                window.removeEventListener('mouseup', onMouseUp);
+                if (isDragging) {
+                    isDragging = false;
+                    card.classList.remove('dragging-node');
+                    window.removeEventListener('mousemove', onMouseMove);
+                    window.removeEventListener('mouseup', onMouseUp);
+                    recordCanvasState();
+                }
             };
 
             window.addEventListener('mousemove', onMouseMove, { passive: true });
@@ -1815,7 +1973,7 @@ ESTRUCTURA DE EVALUACIÓN (6 PILARES):
     }
 
     // -------------------------------------------------------------
-    // PRESETS LOADING & TOOLBAR BUTTONS
+    // PRESETS LOADING, UNDO/REDO & TOOLBAR BUTTONS
     // -------------------------------------------------------------
     function setupCanvasToolbar() {
         const btnPresets = document.getElementById('btn-presets');
@@ -1836,10 +1994,19 @@ ESTRUCTURA DE EVALUACIÓN (6 PILARES):
             });
         });
 
+        // Undo & Redo Buttons
+        const btnUndo = document.getElementById('btn-undo');
+        const btnRedo = document.getElementById('btn-redo');
+        if (btnUndo) btnUndo.addEventListener('click', undo);
+        if (btnRedo) btnRedo.addEventListener('click', redo);
+
         // 1-Click Zero-Cost Optimizer Button
         const btnOptimize = document.getElementById('btn-optimize-to-zerocost');
         if (btnOptimize) {
-            btnOptimize.addEventListener('click', optimizeCanvasToLowCostOrOnPrem);
+            btnOptimize.addEventListener('click', () => {
+                optimizeCanvasToLowCostOrOnPrem();
+                recordCanvasState();
+            });
         }
 
         // Add Sticky Note Button
@@ -1856,6 +2023,8 @@ ESTRUCTURA DE EVALUACIÓN (6 PILARES):
                 };
                 placedCanvasNotes.push(note);
                 renderCanvasNotes();
+                recordCanvasState();
+                showToast('Nota adhesiva agregada', 'success', 2000);
             });
         }
 
@@ -1873,10 +2042,13 @@ ESTRUCTURA DE EVALUACIÓN (6 PILARES):
                 };
                 placedCanvasMarkers.push(marker);
                 renderCanvasNotes();
+                recordCanvasState();
+                showToast('Marcador de flujo agregado', 'success', 2000);
             });
         }
 
         document.getElementById('btn-clear-canvas').addEventListener('click', () => {
+            if (placedCanvasNodes.length > 0 && !confirm('¿Deseas limpiar todo el lienzo?')) return;
             placedCanvasNodes = [];
             placedCanvasZones = [];
             activeConnections = [];
@@ -1887,6 +2059,8 @@ ESTRUCTURA DE EVALUACIÓN (6 PILARES):
             renderCanvasNotes();
             requestConnectionsUpdate();
             updateCostHUD();
+            recordCanvasState();
+            showToast('Lienzo vaciado', 'info', 2000);
         });
 
         document.getElementById('btn-add-zone').addEventListener('click', () => {
@@ -1902,6 +2076,8 @@ ESTRUCTURA DE EVALUACIÓN (6 PILARES):
                 height: 380
             });
             renderCanvasZones();
+            recordCanvasState();
+            showToast('Zona/Subnet creada', 'success', 2000);
         });
 
         document.getElementById('btn-auto-layout').addEventListener('click', () => {
@@ -1911,6 +2087,8 @@ ESTRUCTURA DE EVALUACIÓN (6 PILARES):
             });
             renderCanvasNodes();
             requestConnectionsUpdate();
+            recordCanvasState();
+            showToast('Nodos organizados automáticamente', 'info', 2000);
         });
 
         // Quick Prompt generation
@@ -1942,6 +2120,7 @@ ESTRUCTURA DE EVALUACIÓN (6 PILARES):
                                 applyTopologyToCanvas(parsed);
                                 quickPrompt.value = '';
                                 submitBtn.innerHTML = '<span>Generar</span>';
+                                showToast('Arquitectura generada por Gemini', 'success', 2500);
                                 return;
                             } catch (e) {}
                         }
@@ -1980,6 +2159,7 @@ ESTRUCTURA DE EVALUACIÓN (6 PILARES):
                 loadPreset('zero-cost-fullstack');
             }
             quickPrompt.value = '';
+            showToast('Plantilla aplicada en el lienzo', 'success', 2000);
         }
 
         if (submitBtn) submitBtn.addEventListener('click', handleQuickPrompt);
@@ -1996,55 +2176,62 @@ ESTRUCTURA DE EVALUACIÓN (6 PILARES):
         document.getElementById('btn-export-image').addEventListener('click', exportDiagramImage);
     }
 
-    function applyTopologyToCanvas(topology) {
+    function applyTopologyToCanvas(topology, record = true) {
         if (!topology) return;
-        placedCanvasZones = topology.zones || [];
-        placedCanvasNotes = topology.notes || [];
-        placedCanvasMarkers = topology.markers || [];
-        placedCanvasNodes = (topology.nodes || []).map(n => {
-            const svc = CLOUD_SERVICES.find(s => s.id === n.componentId) || { name: n.componentId, category: 'Service', eco: 'serverless', cost: '$0.00', quota: 'Free Tier', icon: '📦' };
-            return {
-                instanceId: 'node_' + nextInstanceId++,
-                componentId: n.componentId,
-                name: svc.name,
-                category: svc.category,
-                eco: svc.eco,
-                icon: svc.icon,
-                cost: svc.cost,
-                quota: svc.quota || 'Free Tier',
-                x: n.x,
-                y: n.y
-            };
-        });
-
-        activeConnections = [];
-        if (topology.connections) {
-            topology.connections.forEach(c => {
-                const sNode = placedCanvasNodes[c.from];
-                const tNode = placedCanvasNodes[c.to];
-                if (sNode && tNode) {
-                    activeConnections.push({
-                        id: 'conn_' + nextConnId++,
-                        fromInstanceId: sNode.instanceId,
-                        toInstanceId: tNode.instanceId,
-                        label: c.label || 'HTTPS'
-                    });
-                }
+        try {
+            placedCanvasZones = topology.zones || [];
+            placedCanvasNotes = topology.notes || [];
+            placedCanvasMarkers = topology.markers || [];
+            placedCanvasNodes = (topology.nodes || []).map(n => {
+                const svc = CLOUD_SERVICES.find(s => s.id === n.componentId) || { name: n.componentId, category: 'Service', eco: 'serverless', cost: '$0.00', quota: 'Free Tier', icon: '📦' };
+                return {
+                    instanceId: 'node_' + nextInstanceId++,
+                    componentId: n.componentId,
+                    name: svc.name,
+                    category: svc.category,
+                    eco: svc.eco,
+                    icon: svc.icon,
+                    cost: svc.cost,
+                    quota: svc.quota || 'Free Tier',
+                    x: n.x,
+                    y: n.y
+                };
             });
-        }
 
-        renderCanvasZones();
-        renderCanvasNodes();
-        renderCanvasNotes();
-        requestConnectionsUpdate();
-        document.getElementById('cost-estimate-val').textContent = topology.estimatedCost || '$0.00 / mes';
-        document.getElementById('tab-canvas-view').click();
+            activeConnections = [];
+            if (topology.connections) {
+                topology.connections.forEach(c => {
+                    const sNode = placedCanvasNodes[c.from];
+                    const tNode = placedCanvasNodes[c.to];
+                    if (sNode && tNode) {
+                        activeConnections.push({
+                            id: 'conn_' + nextConnId++,
+                            fromInstanceId: sNode.instanceId,
+                            toInstanceId: tNode.instanceId,
+                            label: c.label || 'HTTPS'
+                        });
+                    }
+                });
+            }
+
+            renderCanvasZones();
+            renderCanvasNodes();
+            renderCanvasNotes();
+            requestConnectionsUpdate();
+            document.getElementById('cost-estimate-val').textContent = topology.estimatedCost || '$0.00 / mes';
+            if (record) recordCanvasState();
+        } catch (err) {
+            console.error('Error aplicando topología:', err);
+            showToast('Error al procesar la topología', 'error', 3000);
+        }
     }
 
     function loadPreset(presetKey) {
         const preset = PRESETS[presetKey];
         if (!preset) return;
-        applyTopologyToCanvas(preset);
+        applyTopologyToCanvas(preset, true);
+        document.getElementById('tab-canvas-view').click();
+        showToast(`Plantilla "${preset.title || presetKey}" cargada`, 'success', 2200);
     }
 
     // -------------------------------------------------------------
@@ -3073,6 +3260,23 @@ ESTRUCTURA DE EVALUACIÓN (6 PILARES):
             }
 
             if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+
+            // Undo (Ctrl+Z) and Redo (Ctrl+Y or Ctrl+Shift+Z)
+            if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') {
+                e.preventDefault();
+                if (e.shiftKey) {
+                    redo();
+                } else {
+                    undo();
+                }
+                return;
+            }
+
+            if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'y') {
+                e.preventDefault();
+                redo();
+                return;
+            }
 
             if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {
                 e.preventDefault();

@@ -243,6 +243,16 @@
                                 </div>
                             </div>
 
+                            <!-- Undo / Redo & Session Controls -->
+                            <div class="undo-redo-group" style="display: flex; gap: 4px;">
+                                <button class="action-btn secondary-btn" id="btn-undo" title="Deshacer última acción (Ctrl+Z)" disabled style="padding: 0.35rem 0.6rem;">
+                                    ↩ Deshacer
+                                </button>
+                                <button class="action-btn secondary-btn" id="btn-redo" title="Rehacer acción (Ctrl+Y)" disabled style="padding: 0.35rem 0.6rem;">
+                                    ↪ Rehacer
+                                </button>
+                            </div>
+
                             <button class="action-btn secondary-btn" id="btn-optimize-to-zerocost" title="Transformar servicios costosos a sus equivalentes Zero-Cost / On-Premise ($0.00)" style="border-color: rgba(16, 185, 129, 0.4); color: #6ee7b7;">
                                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
                                 💸 Convertir a $0 / On-Prem
@@ -277,11 +287,16 @@
                             <button class="zoom-btn" id="btn-zoom-out" title="Zoom Out (Ctrl + Rueda)">−</button>
                             <span class="zoom-level-text" id="zoom-level-indicator">100%</span>
                             <button class="zoom-btn" id="btn-zoom-in" title="Zoom In (Ctrl + Rueda)">+</button>
-                            <button class="zoom-btn" id="btn-zoom-reset" title="Restablecer Zoom y Centrar">⛶</button>
+                            <button class="zoom-btn" id="btn-zoom-reset" title="Restablecer Zoom y Centrar (Fit View)">⛶</button>
                         </div>
 
-                        <!-- Cost HUD & Export Actions -->
+                        <!-- Cost HUD, Auto-Save & Export Actions -->
                         <div class="canvas-actions-right">
+                            <div class="autosave-indicator" id="autosave-status" style="font-size: 0.72rem; color: var(--text-muted); display: flex; align-items: center; gap: 4px; padding: 0.2rem 0.5rem; background: var(--bg-card); border-radius: 4px; border: 1px solid var(--border-color);">
+                                <span class="status-dot online" style="width: 6px; height: 6px;"></span>
+                                <span id="autosave-text">Auto-Guardado</span>
+                            </div>
+
                             <div class="cost-estimator-badge" id="canvas-cost-badge" title="Costo estimado mensual de infraestructura">
                                 <span>Costo:</span> <strong id="cost-estimate-val">$0.00 / mes</strong>
                             </div>
@@ -1012,8 +1027,10 @@
                     <a href="/api/projects" target="_blank" class="footer-link">API Proyectos</a>
                 </div>
             </div>
-        </footer>
     </div>
+
+    <!-- Toast Notification Container -->
+    <div id="toast-container" class="toast-container"></div>
 
     <script src="app.js"></script>
 </body>
