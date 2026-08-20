@@ -18,9 +18,9 @@
     --border-color: rgba(255, 255, 255, 0.10);
     --border-highlight: rgba(56, 189, 248, 0.6);
     
-    --text-main: #f1f5f9;
-    --text-muted: #94a3b8;
-    --text-dim: #64748b;
+    --text-main: #ffffff;
+    --text-muted: #cbd5e1;
+    --text-dim: #94a3b8;
     
     --accent-cyan: #38bdf8;
     --accent-blue: #3b82f6;
@@ -646,11 +646,16 @@ body {
     background: none;
     border: none;
     color: var(--text-muted);
-    font-size: 0.85rem;
+    font-size: 0.95rem;
     font-weight: bold;
     cursor: pointer;
-    padding: 0.15rem 0.4rem;
-    border-radius: 3px;
+    min-width: 32px;
+    min-height: 32px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--radius-sm);
+    transition: background 0.15s ease, color 0.15s ease;
 }
 
 .zoom-btn:hover {
@@ -659,10 +664,10 @@ body {
 }
 
 .zoom-level-text {
-    font-size: 0.7rem;
+    font-size: 0.75rem;
     font-family: 'JetBrains Mono', monospace;
     color: var(--accent-cyan);
-    min-width: 38px;
+    min-width: 42px;
     text-align: center;
 }
 

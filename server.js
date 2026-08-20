@@ -2,6 +2,11 @@ const http = require('http');
 const fs = require('fs');
 const fsp = require('fs').promises;
 const path = require('path');
+const zlib = require('zlib');
+const util = require('util');
+
+const gzipAsync = util.promisify(zlib.gzip);
+const deflateAsync = util.promisify(zlib.deflate);
 
 const PORT = process.env.PORT || 3000;
 const PUBLIC_DIR = path.join(__dirname, 'public');
@@ -54,6 +59,37 @@ async function writeProjectsAtomicAsync(projects) {
     await fsp.rename(PROJECTS_TMP_FILE, PROJECTS_FILE);
 }
 
+// Send compressed response helper
+async function sendCompressedResponse(req, res, statusCode, contentType, data, extraHeaders = {}) {
+    const acceptEncoding = req.headers['accept-encoding'] || '';
+    const shouldCompress = contentType.includes('text') || contentType.includes('json') || contentType.includes('javascript') || contentType.includes('svg');
+
+    let payload = data;
+    const headers = {
+        'Content-Type': contentType,
+        'Vary': 'Accept-Encoding',
+        ...extraHeaders
+    };
+
+    if (shouldCompress && typeof data === 'string') {
+        payload = Buffer.from(data, 'utf8');
+    }
+
+    if (shouldCompress && payload.length > 512) {
+        if (acceptEncoding.includes('gzip')) {
+            headers['Content-Encoding'] = 'gzip';
+            payload = await gzipAsync(payload);
+        } else if (acceptEncoding.includes('deflate')) {
+            headers['Content-Encoding'] = 'deflate';
+            payload = await deflateAsync(payload);
+        }
+    }
+
+    headers['Content-Length'] = payload.length;
+    res.writeHead(statusCode, headers);
+    res.end(payload);
+}
+
 const server = http.createServer(async (req, res) => {
     // Security & CORS Headers
     res.setHeader('Access-Control-Allow-Origin', '*');
@@ -74,16 +110,15 @@ const server = http.createServer(async (req, res) => {
     // REST API ROUTES: /api/projects
     // -------------------------------------------------------------
     if (urlPath.startsWith('/api/projects')) {
-        res.setHeader('Content-Type', 'application/json; charset=UTF-8');
-
         // GET /api/projects
         if (req.method === 'GET' && urlPath === '/api/projects') {
             try {
                 const projects = await readProjectsAsync();
-                res.writeHead(200);
-                res.end(JSON.stringify(projects));
+                await sendCompressedResponse(req, res, 200, 'application/json; charset=UTF-8', JSON.stringify(projects), {
+                    'Cache-Control': 'no-cache, must-revalidate'
+                });
             } catch (err) {
-                res.writeHead(500);
+                res.writeHead(500, { 'Content-Type': 'application/json' });
                 res.end(JSON.stringify({ error: 'Failed to load projects' }));
             }
             return;
@@ -121,10 +156,9 @@ const server = http.createServer(async (req, res) => {
                     }
 
                     await writeProjectsAtomicAsync(projects);
-                    res.writeHead(200);
-                    res.end(JSON.stringify({ success: true, project: newProj }));
+                    await sendCompressedResponse(req, res, 200, 'application/json; charset=UTF-8', JSON.stringify({ success: true, project: newProj }));
                 } catch (err) {
-                    res.writeHead(400);
+                    res.writeHead(400, { 'Content-Type': 'application/json' });
                     res.end(JSON.stringify({ error: 'Invalid JSON payload' }));
                 }
             });
@@ -138,10 +172,9 @@ const server = http.createServer(async (req, res) => {
                 let projects = await readProjectsAsync();
                 projects = projects.filter(p => p.id !== projId);
                 await writeProjectsAtomicAsync(projects);
-                res.writeHead(200);
-                res.end(JSON.stringify({ success: true, deletedId: projId }));
+                await sendCompressedResponse(req, res, 200, 'application/json; charset=UTF-8', JSON.stringify({ success: true, deletedId: projId }));
             } catch (err) {
-                res.writeHead(500);
+                res.writeHead(500, { 'Content-Type': 'application/json' });
                 res.end(JSON.stringify({ error: 'Failed to delete project' }));
             }
             return;
@@ -149,7 +182,7 @@ const server = http.createServer(async (req, res) => {
     }
 
     // -------------------------------------------------------------
-    // STATIC ASSET SERVING (Async non-blocking with Cache-Control)
+    // STATIC ASSET SERVING (Async non-blocking with Gzip & Cache-Control)
     // -------------------------------------------------------------
     let reqUrl = urlPath;
     if (reqUrl === '/') reqUrl = '/index.html';
@@ -165,15 +198,17 @@ const server = http.createServer(async (req, res) => {
 
     const ext = path.extname(filePath).toLowerCase();
     const contentType = MIME_TYPES[ext] || 'application/octet-stream';
-    const isImage = ext === '.png' || ext === '.jpg' || ext === '.jpeg' || ext === '.svg' || ext === '.ico';
+    const isImage = ext === '.png' || ext === '.jpg' || ext === '.jpeg' || ext === '.svg' || ext === '.ico' || ext === '.webp';
 
     try {
         const content = await fsp.readFile(filePath);
-        res.writeHead(200, {
-            'Content-Type': contentType,
-            'Cache-Control': isImage ? 'public, max-age=86400' : 'no-cache, must-revalidate'
+        const cacheControl = isImage 
+            ? 'public, max-age=86400, stale-while-revalidate=604800' 
+            : 'public, max-age=3600, stale-while-revalidate=86400';
+
+        await sendCompressedResponse(req, res, 200, contentType, content, {
+            'Cache-Control': cacheControl
         });
-        res.end(content);
     } catch (err) {
         if (err.code === 'ENOENT') {
             res.writeHead(404, { 'Content-Type': 'text/plain; charset=UTF-8' });
