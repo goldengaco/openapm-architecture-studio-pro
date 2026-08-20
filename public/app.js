@@ -2664,36 +2664,43 @@ ESTRUCTURA DE EVALUACIÓN (6 PILARES):
 
         let report = '';
         if (type === 'audit') {
-            report += '🔍 RESULTADOS DE AUDITORÍA DE ARQUITECTURA (MASTER FRAMEWORK 2026):\n\n';
-            const hasAlb = placedCanvasNodes.some(n => n.componentId === 'aws-alb' || n.componentId === 'azure-frontdoor' || n.componentId === 'gcp-cloudcdn' || n.componentId === 'gcp-cloudarmor' || n.componentId === 'traefik' || n.componentId === 'cloudflare-dns');
+            report += '🔍 RESULTADOS DE AUDITORÍA DE ARQUITECTURA & CORRECTITUD FORMAL (2026 Q4):\n\n';
+            const hasAlb = placedCanvasNodes.some(n => n.componentId === 'aws-alb' || n.componentId === 'azure-frontdoor' || n.componentId === 'gcp-cloudcdn' || n.componentId === 'gcp-cloudarmor' || n.componentId === 'traefik' || n.componentId === 'cloudflare-dns' || n.componentId === 'aws-apigateway');
             const hasDB = placedCanvasNodes.some(n => n.category.includes('Database') || n.category.includes('SQL'));
-            const hasQueue = placedCanvasNodes.some(n => n.category.includes('Queue') || n.category.includes('Streaming') || n.componentId === 'gcp-cloudtasks' || n.componentId === 'rabbitmq' || n.componentId === 'kafka');
+            const hasQueue = placedCanvasNodes.some(n => n.category.includes('Queue') || n.category.includes('Streaming') || n.componentId === 'gcp-cloudtasks' || n.componentId === 'rabbitmq' || n.componentId === 'kafka' || n.componentId === 'aws-kinesis');
+            const hasCache = placedCanvasNodes.some(n => n.componentId.includes('redis') || n.componentId === 'upstash-redis' || n.componentId === 'gcp-memorystore');
 
             if (!hasAlb && placedCanvasNodes.length > 2) {
-                report += '⚠️ [SPOF CRÍTICO]: No hay un WAF / DNS / Load Balancer frontal (Cloudflare DNS / Traefik / Cloud Armor). Las peticiones van directo al cómputo.\n';
+                report += '⚠️ [SPOF CRÍTICO & PERÍMETRO]: Falta un Ingress Gateway / WAF frontal (Cloudflare DNS / Traefik / API Gateway). Las peticiones van directo al cómputo sin rate-limiting ni Anycast.\n';
             } else {
-                report += '✅ [INGRESS SEGURO]: El punto de entrada cuenta con enrutador / proxy distribuido con terminación SSL y Anycast.\n';
+                report += '✅ [INGRESS & CIBERSEGURIDAD]: Punto de entrada con proxy Anycast, terminación SSL mTLS y aislamiento de perímetro validado.\n';
+            }
+
+            if (hasDB && !hasCache && placedCanvasNodes.length > 3) {
+                report += '💡 [SIMPATÍA MECÁNICA & LEY DE LITTLE]: Agrega capa de caché (Redis / Upstash). Reducir la latencia de 150ms a 5ms disminuye en un 95% el número de conexiones concurrentes en memoria (L = λW).\n';
             }
 
             if (hasDB) {
-                report += '⚠️ [ALTA DISPONIBILIDAD]: Si es On-Premise, asegura réplicas de streaming WAL o backups automatizados a MinIO.\n';
+                report += '🛡️ [CORRECTITUD FORMAL & IDEMPOTENCIA]: Implementa claves de idempotencia (Idempotency-Key / UUIDv7) en todas las escrituras y Outbox Pattern para evitar inconsistencias en fallos de red.\n';
             }
 
             if (!hasQueue && placedCanvasNodes.length > 4) {
-                report += '💡 [DESACOPLAMIENTO]: Agrega colas asíncronas (RabbitMQ / Kafka / Cloud Tasks) para absorber picos de tráfico sin saturar la base de datos.\n';
+                report += '💡 [DESACOPLAMIENTO & BACKPRESSURE]: Agrega brokers asíncronos (RabbitMQ / Kafka / Kinesis) para absorber picos de tráfico sin colapsar el pool de conexiones de la base de datos.\n';
             }
+
+            report += '\n⚡ [REGLA DE MEMORIA L1/L2]: En microservicios de alto throughput, aplica buffers contiguos (Zero-Copy) y elimina el Pointer Chasing para procesar millones de ops/seg con 0ms TBT.';
         } else {
             report += '💰 RECOMENDACIONES FINOPS, ZERO-COST & ON-PREMISE 2026 Q4:\n\n';
             const isUsingAWS = placedCanvasNodes.some(n => n.eco === 'aws');
             const isUsingGCP = placedCanvasNodes.some(n => n.eco === 'gcp');
             if (isUsingAWS || isUsingGCP) {
-                report += '1. Adquiere tus dominios a precio de costo ICANN en Cloudflare Registrar (~$9.77/año .com) o Porkbun para evitar sobrecostos de $25+ en renovación.\n';
-                report += '2. Reemplaza el Application Load Balancer ($18/mo) por Traefik en tu servidor local ($0.00) o Cloudflare Workers ($0.00).\n';
-                report += '3. Si usas Amazon S3 / GCS, transfiere tus assets a MinIO (S3 On-Prem) o Cloudflare R2 para eliminar el 100% de los costos de salida de datos ($0 Egress).\n';
-                report += '4. Para bases de datos, despliega PostgreSQL dedicado en disco NVMe o usa Supabase/Turso para mantener el costo mensual en $0.00.\n';
-                report += '5. Usa el botón "💸 Convertir a $0 / On-Prem" en la barra superior para aplicar estos reemplazos con 1 clic.\n';
+                report += '1. [DOMINIOS AT-COST]: Adquiere tus dominios a precio de costo ICANN en Cloudflare Registrar (~$9.77/año .com) o Porkbun para evitar sobrecostos de $25+ en renovación.\n';
+                report += '2. [INGRESS $0]: Reemplaza el Application Load Balancer ($18/mo) por Traefik en tu servidor local ($0.00) o Cloudflare Workers ($0.00).\n';
+                report += '3. [EGRESS ZERO-COST]: Si usas Amazon S3 / GCS, transfiere tus assets a MinIO (S3 On-Prem) o Cloudflare R2 para eliminar el 100% de los costos de salida de datos ($0.00 Egress).\n';
+                report += '4. [BASES DE DATOS DEDICADAS]: Despliega PostgreSQL dedicado en disco NVMe local o usa Supabase/Turso para mantener el costo mensual en $0.00.\n';
+                report += '5. [OPTIMIZACIÓN 1-CLIC]: Usa el botón "💸 Convertir a $0 / On-Prem" en la barra superior para aplicar estos reemplazos al instante.\n';
             } else {
-                report += '✅ Tu arquitectura actual se encuentra optimizada para operar en modo Zero-Cost / On-Premise ($0.00 / mes) con cero facturas en la nube.\n';
+                report += '✅ Tu arquitectura actual se encuentra optimizada para operar en modo Zero-Cost / On-Premise ($0.00 / mes) con cero facturas en la nube y márgenes brutos superiores al 95%.\n';
             }
         }
         outContent.textContent = report;

@@ -438,5 +438,23 @@ curl -Iv https://localhost:8080/api/health
   - Expone servidores locales a través de `cloudflared` hacia un dominio personalizado **sin abrir puertos en el router, sin NAT y sin requerir IP pública fija**.
 
 ---
+
+# MÓDULO 14: INGENIERÍA DE CORRECTITUD FORMAL & RENDIMIENTO MECÁNICO (MECHANICAL SYMPATHY 2026)
+
+### 14.1 Correctitud por Diseño (Correctness by Construction)
+1. **Estados Ilegales Irrepresentables**: Modelar estados del dominio usando *Discriminated Unions* / *Algebraic Data Types (ADTs)* para hacer imposible que existan estados inconsistentes en tiempo de compilación.
+2. **Diseño por Contrato (Design by Contract)**: Validar invariantes, precondiciones y postcondiciones en los límites del sistema (I/O, APIs y deserialización de JSON).
+3. **Idempotencia Distribuida**: Todo endpoint de escritura o mutación debe procesar una clave única de idempotencia (`Idempotency-Key` / UUIDv7) en base de datos ACID con bloqueo transaccional para evitar cargos o escrituras duplicadas ante reintentos de red.
+4. **Outbox Pattern**: Garantizar entrega de eventos atómica entre la base de datos principal y el broker de mensajería (Kafka/RabbitMQ) sin inconsistencias distribuidas.
+
+### 14.2 Simpatía Mecánica & Jerarquía de Cachés de CPU (Mechanical Sympathy)
+1. **La Regla de los $64\text{ Bytes}$ (L1/L2 Cache Lines)**: El procesador transfiere memoria en bloques contiguos de 64 bytes. Organizar las estructuras en *Struct of Arrays (SoA)* o memoria contigua lineal para evitar el *Pointer Chasing* y lograr $200\times$ menor latencia que ir a memoria RAM (DRAM).
+2. **Zero-Copy I/O & Buffer Pooling**: En APIs de alto throughput, reutilizar buffers y streams directos sin copias intermedias en Heap, reduciendo al 0% las pausas por Garbage Collection (GC pauses).
+3. **Lock-Free Concurrency & Ring Buffers (Patrón Disruptor)**: Usar operaciones atómicas de CPU (`compare-and-swap`) y búferes circulares indexados para procesar más de 10 millones de operaciones por segundo por núcleo.
+4. **Leyes Fundamentales**:
+   - **Ley de Amdahl**: La aceleración máxima en sistemas paralelos está limitada por la porción secuencial no paralelizable ($S = 1 / ((1-p) + p/s)$).
+   - **Ley de Little ($L = \lambda W$)**: Para reducir la memoria ocupada por conexiones concurrentes ($L$), se debe minimizar drásticamente el tiempo de respuesta ($W$). Reducir latencia de $200\text{ms}$ a $20\text{ms}$ reduce el consumo de RAM en un $90\%$.
+
+---
 *Manual generado y optimizado para Cloud & APM Architecture Studio Pro 2026.*
 
