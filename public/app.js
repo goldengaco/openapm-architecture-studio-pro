@@ -708,51 +708,50 @@ ESTRUCTURA DE EVALUACIÓN (6 PILARES):
         'aws-serverless-analytics': {
             cost: '$15.00 - $45.00 / mes (Serverless Pay-per-Use)',
             zones: [
-                { id: 'z_dw', title: 'Data Warehouse Tier', type: 'aws', x: 40, y: 70, width: 550, height: 180 },
-                { id: 'z_analytics', title: 'Data Analytics Pipeline Tier', type: 'aws', x: 40, y: 270, width: 550, height: 280 },
-                { id: 'z_webapp', title: 'Web Application Tier (Serverless)', type: 'aws', x: 620, y: 70, width: 440, height: 480 }
+                { id: 'z_edge', title: '1. Ingress & API Gateway Tier', type: 'aws', x: 40, y: 70, width: 310, height: 600 },
+                { id: 'z_compute', title: '2. Serverless Lambda Compute Tier', type: 'aws', x: 390, y: 70, width: 310, height: 600 },
+                { id: 'z_data', title: '3. Streaming, Queues & Fast DB Tier', type: 'aws', x: 740, y: 70, width: 310, height: 600 },
+                { id: 'z_lakehouse', title: '4. S3 Data Lake & Redshift Analytics Tier', type: 'aws', x: 1090, y: 70, width: 310, height: 600 }
             ],
             nodes: [
-                { componentId: 'aws-route53', x: 920, y: 140 },
-                { componentId: 'aws-apigateway', x: 920, y: 270 },
-                { componentId: 'aws-lambda', x: 740, y: 110 },
-                { componentId: 'aws-lambda', x: 740, y: 190 },
-                { componentId: 'aws-lambda', x: 740, y: 310 },
-                { componentId: 'aws-lambda', x: 740, y: 400 },
-                { componentId: 'aws-dynamodb', x: 640, y: 150 },
-                { componentId: 'aws-kinesis', x: 640, y: 350 },
-                { componentId: 'aws-lambda', x: 470, y: 340 },
-                { componentId: 'aws-firehose', x: 340, y: 300 },
-                { componentId: 'aws-firehose', x: 340, y: 420 },
-                { componentId: 'aws-s3', x: 210, y: 360 },
-                { componentId: 'aws-athena', x: 70, y: 440 },
-                { componentId: 'aws-s3', x: 70, y: 320 },
-                { componentId: 'aws-lambda', x: 70, y: 110 },
-                { componentId: 'aws-sqs', x: 200, y: 110 },
-                { componentId: 'aws-eks', x: 330, y: 110 },
-                { componentId: 'aws-redshift', x: 460, y: 110 }
+                { componentId: 'aws-route53', x: 70, y: 150 },
+                { componentId: 'aws-apigateway', x: 70, y: 310 },
+                { componentId: 'aws-lambda', x: 420, y: 110 },
+                { componentId: 'aws-lambda', x: 420, y: 240 },
+                { componentId: 'aws-lambda', x: 420, y: 370 },
+                { componentId: 'aws-lambda', x: 420, y: 500 },
+                { componentId: 'aws-dynamodb', x: 770, y: 110 },
+                { componentId: 'aws-kinesis', x: 770, y: 240 },
+                { componentId: 'aws-firehose', x: 770, y: 370 },
+                { componentId: 'aws-sqs', x: 770, y: 500 },
+                { componentId: 'aws-s3', x: 1120, y: 110 },
+                { componentId: 'aws-athena', x: 1120, y: 240 },
+                { componentId: 'aws-eks', x: 1120, y: 370 },
+                { componentId: 'aws-redshift', x: 1120, y: 500 }
             ],
             connections: [
-                { from: 0, to: 1, label: 'Alias Record' },
-                { from: 1, to: 2, label: 'Create' },
-                { from: 1, to: 3, label: 'Read' },
-                { from: 1, to: 4, label: 'Update' },
-                { from: 1, to: 5, label: 'Delete' },
-                { from: 2, to: 6, label: 'Write' },
-                { from: 3, to: 6, label: 'Read' },
-                { from: 4, to: 7, label: 'Ingest Stream' },
-                { from: 5, to: 7, label: 'Ingest Stream' },
-                { from: 7, to: 8, label: 'Consume' },
-                { from: 8, to: 9, label: 'Web Session' },
-                { from: 8, to: 10, label: 'Usage Analytics' },
-                { from: 9, to: 11, label: 'Batch S3' },
-                { from: 10, to: 11, label: 'Batch S3' },
-                { from: 12, to: 11, label: 'SQL Scan' },
-                { from: 12, to: 13, label: 'Query Output' },
-                { from: 13, to: 14, label: 'Trigger Event' },
-                { from: 14, to: 15, label: 'Enqueue' },
-                { from: 15, to: 16, label: 'Worker Pull' },
-                { from: 16, to: 17, label: 'Load Redshift' }
+                { from: 0, to: 1, label: 'Anycast DNS' },
+                { from: 1, to: 2, label: 'CRUD API' },
+                { from: 1, to: 3, label: 'Event Ingest' },
+                { from: 2, to: 6, label: 'Dynamo SDK' },
+                { from: 3, to: 7, label: 'PutRecord Stream' },
+                { from: 7, to: 8, label: 'Auto Delivery' },
+                { from: 8, to: 10, label: 'Batch Parquet' },
+                { from: 11, to: 10, label: 'SQL over S3' },
+                { from: 7, to: 4, label: 'Stream Consumer' },
+                { from: 4, to: 9, label: 'Enqueue DLQ' },
+                { from: 9, to: 5, label: 'Batch Worker' },
+                { from: 5, to: 13, label: 'COPY Redshift' },
+                { from: 12, to: 10, label: 'Spark Read S3' }
+            ],
+            notes: [
+                { id: 'note_aws_1', text: '⚡ **Serverless Analytics**: Ingesta masiva en Kinesis ➔ Firehose hacia S3 en formato Parquet, con consultas instantáneas vía Athena ($5/TB scan) y Redshift Serverless para BI.', color: 'blue', x: 390, y: 690, width: 660, height: 95 }
+            ],
+            markers: [
+                { id: 'mark_aws_1', num: '1', text: 'Ingress & Gateway', x: 110, y: 40 },
+                { id: 'mark_aws_2', num: '2', text: 'Lambda FaaS', x: 460, y: 40 },
+                { id: 'mark_aws_3', num: '3', text: 'Streaming & Queues', x: 810, y: 40 },
+                { id: 'mark_aws_4', num: '4', text: 'Data Lake & DWH', x: 1160, y: 40 }
             ]
         },
         'gcp-cloudrun-bigquery': {
@@ -1836,6 +1835,7 @@ ESTRUCTURA DE EVALUACIÓN (6 PILARES):
     // -------------------------------------------------------------
     function renderCanvasConnections() {
         const svgGroup = document.getElementById('svg-paths-group');
+        if (!svgGroup) return;
         svgGroup.innerHTML = '';
 
         // Remove old DOM label tags
@@ -1851,15 +1851,48 @@ ESTRUCTURA DE EVALUACIÓN (6 PILARES):
             const tNode = placedCanvasNodes.find(n => n.instanceId === conn.toInstanceId);
             if (!sNode || !tNode) return;
 
-            const x1 = sNode.x + nodeW;
-            const y1 = sNode.y + (nodeH / 2);
-            const x2 = tNode.x;
-            const y2 = tNode.y + (nodeH / 2);
+            let x1, y1, x2, y2;
+            const horizontalDist = tNode.x - sNode.x;
+
+            if (horizontalDist >= 120) {
+                // Target is to the right (Left-to-Right standard flow)
+                x1 = sNode.x + nodeW;
+                y1 = sNode.y + (nodeH / 2);
+                x2 = tNode.x;
+                y2 = tNode.y + (nodeH / 2);
+            } else if (horizontalDist <= -120) {
+                // Target is to the left
+                x1 = sNode.x;
+                y1 = sNode.y + (nodeH / 2);
+                x2 = tNode.x + nodeW;
+                y2 = tNode.y + (nodeH / 2);
+            } else {
+                // Same column or stacked vertically
+                if (tNode.y >= sNode.y) {
+                    x1 = sNode.x + (nodeW / 2);
+                    y1 = sNode.y + nodeH;
+                    x2 = tNode.x + (nodeW / 2);
+                    y2 = tNode.y;
+                } else {
+                    x1 = sNode.x + (nodeW / 2);
+                    y1 = sNode.y;
+                    x2 = tNode.x + (nodeW / 2);
+                    y2 = tNode.y + nodeH;
+                }
+            }
 
             const dx = Math.abs(x2 - x1);
-            const offset = Math.max(dx * 0.45, 45);
+            const dy = Math.abs(y2 - y1);
+            const offset = Math.max(dx * 0.45, dy * 0.35, 45);
 
-            const d = `M ${x1} ${y1} C ${x1 + offset} ${y1}, ${x2 - offset} ${y2}, ${x2} ${y2}`;
+            let d;
+            if (Math.abs(x2 - x1) >= 80) {
+                const dirX = x2 >= x1 ? 1 : -1;
+                d = `M ${x1} ${y1} C ${x1 + (offset * dirX)} ${y1}, ${x2 - (offset * dirX)} ${y2}, ${x2} ${y2}`;
+            } else {
+                const dirY = y2 >= y1 ? 1 : -1;
+                d = `M ${x1} ${y1} C ${x1} ${y1 + (offset * dirY)}, ${x2} ${y2 - (offset * dirY)}, ${x2} ${y2}`;
+            }
 
             const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
             path.setAttribute('d', d);
@@ -1867,24 +1900,27 @@ ESTRUCTURA DE EVALUACIÓN (6 PILARES):
             path.setAttribute('marker-end', 'url(#arrowhead)');
             svgGroup.appendChild(path);
 
-            // Clickable Label Tag (Positioned cleanly above the midpoint curve)
+            // Clickable Label Tag (Positioned cleanly at the curve midpoint)
             if (conn.label) {
                 const labelTag = document.createElement('div');
                 labelTag.className = 'conn-label-tag';
-                labelTag.style.left = ((x1 + x2) / 2) + 'px';
-                labelTag.style.top = ((y1 + y2) / 2 - 14) + 'px';
-                labelTag.innerHTML = `<span>${escapeHtml(conn.label)}</span><span style="color:var(--accent-rose); margin-left:2px;">✕</span>`;
+                const midX = (x1 + x2) / 2;
+                const midY = (y1 + y2) / 2;
+                labelTag.style.left = midX + 'px';
+                labelTag.style.top = (midY - 14) + 'px';
+                labelTag.innerHTML = `<span>${escapeHtml(conn.label)}</span><span style="color:var(--accent-rose); margin-left:3px; font-weight:bold;">✕</span>`;
 
                 labelTag.addEventListener('click', (e) => {
                     e.stopPropagation();
-                    const action = confirm(`¿Eliminar conexión ${conn.label}? (Aceptar para borrar, Cancelar para editar etiqueta)`);
+                    const action = confirm(`¿Eliminar conexión "${conn.label}"? (Aceptar para borrar, Cancelar para editar protocolo)`);
                     if (action) {
                         activeConnections = activeConnections.filter(c => c.id !== conn.id);
                     } else {
-                        const newL = prompt('Editar protocolo:', conn.label);
+                        const newL = prompt('Editar protocolo / etiqueta:', conn.label);
                         if (newL) conn.label = escapeHtml(newL.trim());
                     }
                     requestConnectionsUpdate();
+                    recordCanvasState();
                 });
 
                 frag.appendChild(labelTag);
@@ -2080,16 +2116,128 @@ ESTRUCTURA DE EVALUACIÓN (6 PILARES):
             showToast('Zona/Subnet creada', 'success', 2000);
         });
 
-        document.getElementById('btn-auto-layout').addEventListener('click', () => {
-            placedCanvasNodes.forEach((node, idx) => {
-                node.x = 60 + (idx % 4) * 280;
-                node.y = 120 + Math.floor(idx / 4) * 140;
+        function autoLayoutArchitecture() {
+            if (placedCanvasNodes.length === 0) {
+                showToast('No hay nodos en el lienzo para organizar', 'info', 2000);
+                return;
+            }
+
+            // 1. Map nodes and initialize layers based on component categories
+            const nodeLayer = {};
+            function getCategoryDefaultLayer(cat, eco, id) {
+                const cLower = (cat || '').toLowerCase();
+                const idLower = (id || '').toLowerCase();
+                if (cLower.includes('dns') || cLower.includes('gateway') || cLower.includes('ingress') || cLower.includes('cdn') || cLower.includes('waf') || idLower.includes('route53') || idLower.includes('frontdoor') || idLower.includes('traefik') || idLower.includes('cloudflare-dns') || idLower.includes('duckdns') || idLower.includes('tanstack-start') || idLower.includes('vercel') || idLower.includes('apigateway')) {
+                    return 0; // Layer 0: Ingress / Edge / Gateway / DNS
+                }
+                if (cLower.includes('compute') || cLower.includes('serverless') || cLower.includes('faas') || cLower.includes('api') || idLower.includes('lambda') || idLower.includes('cloudrun') || idLower.includes('fargate') || idLower.includes('functions') || idLower.includes('hono') || idLower.includes('ollama')) {
+                    return 1; // Layer 1: Compute / APIs / Microservices
+                }
+                if (cLower.includes('queue') || cLower.includes('streaming') || cLower.includes('broker') || cLower.includes('ingest') || cLower.includes('pubsub') || idLower.includes('kinesis') || idLower.includes('firehose') || idLower.includes('sqs') || idLower.includes('rabbitmq') || idLower.includes('kafka') || idLower.includes('cloudtasks')) {
+                    return 2; // Layer 2: Streaming / Queues / Messaging
+                }
+                if (cLower.includes('database') || cLower.includes('sql') || cLower.includes('nosql') || cLower.includes('cache') || cLower.includes('storage') || cLower.includes('object') || idLower.includes('dynamodb') || idLower.includes('postgres') || idLower.includes('supabase') || idLower.includes('turso') || idLower.includes('redis') || idLower.includes('s3') || idLower.includes('minio') || idLower.includes('r2') || idLower.includes('cosmos') || idLower.includes('qdrant')) {
+                    return 3; // Layer 3: Databases / Cache / Storage
+                }
+                if (cLower.includes('analytics') || cLower.includes('warehouse') || cLower.includes('olap') || cLower.includes('monitoring') || cLower.includes('apm') || idLower.includes('athena') || idLower.includes('redshift') || idLower.includes('bigquery') || idLower.includes('duckdb') || idLower.includes('clickhouse') || idLower.includes('grafana') || idLower.includes('eks')) {
+                    return 4; // Layer 4: Analytics / DWH / Observability
+                }
+                return 1;
+            }
+
+            placedCanvasNodes.forEach(n => {
+                nodeLayer[n.instanceId] = getCategoryDefaultLayer(n.category, n.eco, n.componentId);
             });
+
+            // 2. Refine layer ranks via topological sorting along activeConnections
+            let changed = true;
+            let iterations = 0;
+            while (changed && iterations < 8) {
+                changed = false;
+                iterations++;
+                activeConnections.forEach(c => {
+                    const fromL = nodeLayer[c.fromInstanceId];
+                    const toL = nodeLayer[c.toInstanceId];
+                    if (fromL !== undefined && toL !== undefined && toL <= fromL) {
+                        nodeLayer[c.toInstanceId] = fromL + 1;
+                        changed = true;
+                    }
+                });
+            }
+
+            // Group nodes by layer
+            const layers = {};
+            placedCanvasNodes.forEach(n => {
+                const l = nodeLayer[n.instanceId] || 0;
+                if (!layers[l]) layers[l] = [];
+                layers[l].push(n);
+            });
+
+            const sortedLayerKeys = Object.keys(layers).map(Number).sort((a, b) => a - b);
+
+            // 3. Assign clean non-overlapping coordinates (360px col width, 140px row height)
+            const startX = 70;
+            const startY = 120;
+            const colWidth = 360;
+            const rowHeight = 140;
+
+            let maxNodesInLayer = 0;
+            sortedLayerKeys.forEach(k => {
+                maxNodesInLayer = Math.max(maxNodesInLayer, layers[k].length);
+            });
+
+            const totalHeight = Math.max(540, maxNodesInLayer * rowHeight + 80);
+
+            sortedLayerKeys.forEach((layerKey, colIndex) => {
+                const colNodes = layers[layerKey];
+                const colX = startX + (colIndex * colWidth);
+                const colCount = colNodes.length;
+                const colTotalHeight = colCount * rowHeight;
+                const colOffsetY = startY + Math.max(0, (totalHeight - colTotalHeight) / 2);
+
+                colNodes.forEach((node, rowIndex) => {
+                    node.x = colX;
+                    node.y = Math.round(colOffsetY + (rowIndex * rowHeight));
+                });
+            });
+
+            // 4. Clean zone wrapping
+            if (placedCanvasZones.length > 0) {
+                const layerTitles = [
+                    '1. Ingress & Gateway Tier',
+                    '2. Cómputo & Microservicios Tier',
+                    '3. Streaming, Colas & Eventos Tier',
+                    '4. Persistencia, Cache & Storage Tier',
+                    '5. Analítica, DWH & Observabilidad Tier'
+                ];
+
+                sortedLayerKeys.forEach((layerKey, colIndex) => {
+                    const colNodes = layers[layerKey];
+                    if (!colNodes || colNodes.length === 0) return;
+
+                    let z = placedCanvasZones[colIndex];
+                    if (z) {
+                        z.x = startX + (colIndex * colWidth) - 30;
+                        z.y = startY - 50;
+                        z.width = colWidth - 40;
+                        z.height = totalHeight + 40;
+                        if (!z.title || z.title.includes('Tier') || z.title.includes('Subnet')) {
+                            z.title = layerTitles[colIndex] || `Tier ${colIndex + 1}`;
+                        }
+                    }
+                });
+            }
+
+            renderCanvasZones();
             renderCanvasNodes();
+            renderCanvasNotes();
             requestConnectionsUpdate();
             recordCanvasState();
-            showToast('Nodos organizados automáticamente', 'info', 2000);
-        });
+            resetZoomAndFitView();
+            showToast('Arquitectura organizada en capas Left-to-Right con cero solapamiento', 'success', 2500);
+        }
+
+        document.getElementById('btn-auto-layout').addEventListener('click', autoLayoutArchitecture);
 
         // Quick Prompt generation
         const quickPrompt = document.getElementById('canvas-quick-prompt');
