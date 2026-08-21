@@ -201,65 +201,78 @@ const server = http.createServer(async (req, res) => {
                     return;
                 }
 
-                // 1. OpenCode Go (Default & Ultra-Fast)
+                // 1. OpenCode Go (Default & Ultra-Fast with Auto-Fallback)
                 if (provider === 'opencode' || !payload.provider) {
-                    const controller = new AbortController();
-                    const timeoutId = setTimeout(() => controller.abort(), 35000);
+                    const primaryModel = model;
+                    const fallbackList = [primaryModel, 'deepseek-v4-flash', 'mimo-v2.5', 'minimax-m3', 'ox-alpha-free'];
+                    const tried = new Set();
 
-                    try {
-                        const apiRes = await fetch('https://opencode.ai/zen/go/v1/chat/completions', {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'Authorization': `Bearer ${apiKey}`
-                            },
-                            body: JSON.stringify({
-                                model: model,
-                                messages: [
-                                    { role: 'system', content: 'Eres un Principal Cloud & Observability Solutions Architect. Diseña la arquitectura solicitada y emite SIEMPRE al final el bloque JSON de topología con {"zones": [], "nodes": [{"id": "n1", "name": "...", "category": "...", "eco": "...", "x": 100, "y": 100}], "connections": [{"from": 0, "to": 1, "label": "HTTPS"}]} dentro de ```json ... ```.' },
-                                    { role: 'user', content: prompt }
-                                ],
-                                temperature: 0.2,
-                                max_tokens: 2200
-                            }),
-                            signal: controller.signal
-                        });
+                    for (const candidateModel of fallbackList) {
+                        if (tried.has(candidateModel)) continue;
+                        tried.add(candidateModel);
 
-                        clearTimeout(timeoutId);
+                        const controller = new AbortController();
+                        const timeoutId = setTimeout(() => controller.abort(), 25000);
 
-                        if (apiRes.ok) {
-                            const data = await apiRes.json();
-                            let text = data.choices?.[0]?.message?.content || '';
-                            text = text.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
+                        try {
+                            const apiRes = await fetch('https://opencode.ai/zen/go/v1/chat/completions', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'Authorization': `Bearer ${apiKey}`
+                                },
+                                body: JSON.stringify({
+                                    model: candidateModel,
+                                    messages: [
+                                        { role: 'system', content: 'Eres un Principal Cloud & Observability Solutions Architect. Diseña la arquitectura solicitada y emite SIEMPRE al final el bloque JSON de topología con {"zones": [], "nodes": [{"id": "n1", "name": "...", "category": "...", "eco": "...", "x": 100, "y": 100}], "connections": [{"from": 0, "to": 1, "label": "HTTPS"}]} dentro de ```json ... ```.' },
+                                        { role: 'user', content: prompt }
+                                    ],
+                                    temperature: 0.2,
+                                    max_tokens: 2200
+                                }),
+                                signal: controller.signal
+                            });
 
-                            let topology = null;
-                            const match = text.match(/```json\s*([\s\S]*?)\s*```/) || text.match(/(\{[\s\S]*"nodes"[\s\S]*\})/);
-                            if (match) {
-                                try {
-                                    topology = JSON.parse(match[1] || match[0]);
-                                } catch (e) {}
+                            clearTimeout(timeoutId);
+
+                            if (apiRes.ok) {
+                                const data = await apiRes.json();
+                                let text = data.choices?.[0]?.message?.content || '';
+                                text = text.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
+
+                                if (!text || text.length === 0) {
+                                    console.warn(`OpenCode ${candidateModel} returned empty text, trying next fallback...`);
+                                    continue;
+                                }
+
+                                let topology = null;
+                                const match = text.match(/```json\s*([\s\S]*?)\s*```/) || text.match(/(\{[\s\S]*"nodes"[\s\S]*\})/);
+                                if (match) {
+                                    try {
+                                        topology = JSON.parse(match[1] || match[0]);
+                                    } catch (e) {}
+                                }
+
+                                await sendCompressedResponse(req, res, 200, 'application/json; charset=UTF-8', JSON.stringify({
+                                    success: true,
+                                    provider: 'opencode',
+                                    model: candidateModel,
+                                    rawText: text,
+                                    topology: topology
+                                }));
+                                return;
+                            } else {
+                                console.warn(`OpenCode ${candidateModel} error ${apiRes.status}, trying fallback...`);
                             }
-
-                            await sendCompressedResponse(req, res, 200, 'application/json; charset=UTF-8', JSON.stringify({
-                                success: true,
-                                provider: 'opencode',
-                                model: model,
-                                rawText: text,
-                                topology: topology
-                            }));
-                            return;
-                        } else {
-                            const errTxt = await apiRes.text();
-                            res.writeHead(apiRes.status, { 'Content-Type': 'application/json' });
-                            res.end(JSON.stringify({ error: errTxt }));
-                            return;
+                        } catch (fetchErr) {
+                            clearTimeout(timeoutId);
+                            console.warn(`OpenCode ${candidateModel} timeout/error:`, fetchErr.message);
                         }
-                    } catch (fetchErr) {
-                        clearTimeout(timeoutId);
-                        res.writeHead(504, { 'Content-Type': 'application/json' });
-                        res.end(JSON.stringify({ error: 'AI Gateway Timeout: ' + fetchErr.message }));
-                        return;
                     }
+
+                    res.writeHead(504, { 'Content-Type': 'application/json' });
+                    res.end(JSON.stringify({ error: 'All OpenCode models exhausted or timed out.' }));
+                    return;
                 }
 
                 // Fallback / Unsupported provider

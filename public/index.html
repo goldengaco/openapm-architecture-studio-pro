@@ -803,21 +803,23 @@
                     <!-- OpenCode Go Config Box -->
                     <div class="ai-config-box" id="ai-provider-opencode-box">
                         <div class="ai-config-header">
-                            <strong>⚡ OpenCode Go API (DeepSeek V4 Flash & MiMo)</strong>
-                            <span class="badge-tag" style="background: linear-gradient(135deg, rgba(16,185,129,0.2), rgba(56,189,248,0.2)); color: var(--accent-emerald);">⚡ ~2.6s Latencia · 7,600+ req/5h</span>
+                            <strong>⚡ OpenCode Go API (DeepSeek, Muse Spark & MiMo)</strong>
+                            <span class="badge-tag" style="background: linear-gradient(135deg, rgba(16,185,129,0.2), rgba(56,189,248,0.2)); color: var(--accent-emerald);">⚡ Hasta 45,300 req/5h · Auto-Fallback</span>
                         </div>
                         <div class="ai-input-row">
                             <input type="password" id="opencode-api-key-input" placeholder="sk-..." style="max-width: 260px;">
                             <select id="opencode-model-select" style="background: var(--bg-card); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 6px; padding: 0.4rem; font-size: 0.75rem;">
-                                <option value="deepseek-v4-flash" selected>⚡ DeepSeek V4 Flash (2.6s · 7.6k req/5h - Recomendado)</option>
-                                <option value="mimo-v2.5">🚀 MiMo V2.5 (3.3s · 30.1k req/5h - Ultraligero)</option>
-                                <option value="minimax-m3">🧠 MiniMax M3 (13s · 3.2k req/5h - Razonamiento)</option>
+                                <option value="deepseek-v4-flash" selected>⚡ DeepSeek V4 Flash (7.6k req/5h · Rápido & Preciso)</option>
+                                <option value="mimo-v2.5">🚀 MiMo V2.5 (30.1k req/5h · Alto Volumen)</option>
+                                <option value="muse-spark-1.2-contributor">✨ Muse Spark 1.2 Contributor (45.3k req/5h · Cuota Máxima)</option>
+                                <option value="hy3">🌊 Hy3 8x (34.4k req/5h)</option>
+                                <option value="minimax-m3">🧠 MiniMax M3 (3.2k req/5h · Razonamiento Extendido)</option>
                                 <option value="ox-alpha-free">🆓 Ox Alpha Free (Ilimitado ∞)</option>
                             </select>
                             <button class="action-btn primary-btn" id="btn-save-opencode-key">Guardar Clave</button>
                         </div>
                         <div class="ai-help-links" style="margin-top: 0.5rem;">
-                            <span>Modelos seleccionados por alta velocidad, precisión en formato JSON de arquitectura y cuota masiva.</span>
+                            <span>Modelos de alto volumen de OpenCode Go con fallback automático en caso de saturación o límite de región.</span>
                         </div>
                     </div>
 
