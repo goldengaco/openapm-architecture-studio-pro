@@ -182,7 +182,96 @@ const server = http.createServer(async (req, res) => {
     }
 
     // -------------------------------------------------------------
-    // STATIC ASSET SERVING (Async non-blocking with Gzip & Cache-Control)
+    // REST API ROUTES: /api/ai/generate (High-Performance AI Proxy)
+    // -------------------------------------------------------------
+    if (urlPath === '/api/ai/generate' && req.method === 'POST') {
+        let body = '';
+        req.on('data', chunk => { body += chunk.toString(); });
+        req.on('end', async () => {
+            try {
+                const payload = JSON.parse(body || '{}');
+                const provider = payload.provider || 'opencode';
+                const model = payload.model || 'deepseek-v4-flash';
+                const prompt = payload.prompt || '';
+                const apiKey = payload.apiKey || 'sk-v9lFQF3jnR0f5LSqPD7mKjdHUQSqv6Ndr9NLYjgHktWAud9bPtDFzjZyxVw8TmcL';
+
+                if (!prompt) {
+                    res.writeHead(400, { 'Content-Type': 'application/json' });
+                    res.end(JSON.stringify({ error: 'Prompt is required' }));
+                    return;
+                }
+
+                // 1. OpenCode Go (Default & Ultra-Fast)
+                if (provider === 'opencode' || !payload.provider) {
+                    const controller = new AbortController();
+                    const timeoutId = setTimeout(() => controller.abort(), 35000);
+
+                    try {
+                        const apiRes = await fetch('https://opencode.ai/zen/go/v1/chat/completions', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Authorization': `Bearer ${apiKey}`
+                            },
+                            body: JSON.stringify({
+                                model: model,
+                                messages: [
+                                    { role: 'system', content: 'Eres un Principal Cloud & Observability Solutions Architect. Diseña la arquitectura solicitada y emite SIEMPRE al final el bloque JSON de topología con {"zones": [], "nodes": [{"id": "n1", "name": "...", "category": "...", "eco": "...", "x": 100, "y": 100}], "connections": [{"from": 0, "to": 1, "label": "HTTPS"}]} dentro de ```json ... ```.' },
+                                    { role: 'user', content: prompt }
+                                ],
+                                temperature: 0.2,
+                                max_tokens: 2200
+                            }),
+                            signal: controller.signal
+                        });
+
+                        clearTimeout(timeoutId);
+
+                        if (apiRes.ok) {
+                            const data = await apiRes.json();
+                            let text = data.choices?.[0]?.message?.content || '';
+                            text = text.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
+
+                            let topology = null;
+                            const match = text.match(/```json\s*([\s\S]*?)\s*```/) || text.match(/(\{[\s\S]*"nodes"[\s\S]*\})/);
+                            if (match) {
+                                try {
+                                    topology = JSON.parse(match[1] || match[0]);
+                                } catch (e) {}
+                            }
+
+                            await sendCompressedResponse(req, res, 200, 'application/json; charset=UTF-8', JSON.stringify({
+                                success: true,
+                                provider: 'opencode',
+                                model: model,
+                                rawText: text,
+                                topology: topology
+                            }));
+                            return;
+                        } else {
+                            const errTxt = await apiRes.text();
+                            res.writeHead(apiRes.status, { 'Content-Type': 'application/json' });
+                            res.end(JSON.stringify({ error: errTxt }));
+                            return;
+                        }
+                    } catch (fetchErr) {
+                        clearTimeout(timeoutId);
+                        res.writeHead(504, { 'Content-Type': 'application/json' });
+                        res.end(JSON.stringify({ error: 'AI Gateway Timeout: ' + fetchErr.message }));
+                        return;
+                    }
+                }
+
+                // Fallback / Unsupported provider
+                res.writeHead(400, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ error: 'Unsupported provider: ' + provider }));
+            } catch (err) {
+                res.writeHead(500, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ error: err.message }));
+            }
+        });
+        return;
+    }
     // -------------------------------------------------------------
     let reqUrl = urlPath;
     if (reqUrl === '/') reqUrl = '/index.html';

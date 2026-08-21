@@ -121,6 +121,9 @@ ESTRUCTURA DE EVALUACIÓN (6 PILARES):
             if (statusCallback) statusCallback(`🔄 Intentando ${model.name}...`);
 
             try {
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 10000);
+
                 const res = await fetch(
                     `https://generativelanguage.googleapis.com/v1beta/models/${model.id}:generateContent?key=${apiKey}`,
                     {
@@ -129,9 +132,11 @@ ESTRUCTURA DE EVALUACIÓN (6 PILARES):
                         body: JSON.stringify({
                             contents: [{ parts: [{ text: promptText }] }],
                             generationConfig: { temperature: 0.7, maxOutputTokens: 8192 }
-                        })
+                        }),
+                        signal: controller.signal
                     }
                 );
+                clearTimeout(timeoutId);
 
                 if (res.status === 429) {
                     // Rate limited → mark exhausted and try next model
@@ -2395,67 +2400,49 @@ ESTRUCTURA DE EVALUACIÓN (6 PILARES):
             const q = (quickPrompt.value || '').trim();
             if (!q) return;
 
-            const opencodeKey = safeStorage.get('opencode_api_key');
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<span class="loading-spin">⚡</span> Generando...';
+            showToast('🤖 Diseñando arquitectura con DeepSeek V4 Flash...', 'info', 2500);
+
+            const opencodeKey = safeStorage.get('opencode_api_key', '');
             const opencodeModel = safeStorage.get('opencode_model', 'deepseek-v4-flash');
-            const geminiKey = safeStorage.get('gemini_api_key');
+            const geminiKey = safeStorage.get('gemini_api_key', '');
 
-            // 1. OpenCode Go Provider (Ultra-Fast ~2.6s Latency)
-            if ((currentAIProvider === 'opencode' && opencodeKey) || (opencodeKey && !geminiKey)) {
-                try {
-                    submitBtn.textContent = '⚡ Generando...';
-                    const promptMsg = `${MASTER_MEGA_PROMPT}\n\nREQUERIMIENTO DEL USUARIO:\n${q}\n\nDiseña la arquitectura completa y emite OBLIGATORIAMENTE al final el bloque JSON con {"nodes": [{"id": "...", "name": "...", "category": "...", "eco": "...", "x": 100, "y": 100}], "connections": [{"from": 0, "to": 1, "label": "HTTPS"}]} dentro de \`\`\`json ... \`\`\`.`;
-                    
-                    const res = await fetch('https://opencode.ai/zen/go/v1/chat/completions', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'Authorization': 'Bearer ' + opencodeKey
-                        },
-                        body: JSON.stringify({
-                            model: opencodeModel,
-                            messages: [
-                                { role: 'system', content: 'Eres un Principal Cloud Solutions Architect & FinOps Lead. Responde con la explicación técnica concisa y el bloque JSON al final.' },
-                                { role: 'user', content: promptMsg }
-                            ],
-                            temperature: 0.3,
-                            max_tokens: 2500
-                        })
-                    });
+            // 1. Primary Engine: Server-side High-Speed AI Proxy (/api/ai/generate)
+            try {
+                const res = await fetch('/api/ai/generate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        provider: currentAIProvider || 'opencode',
+                        model: opencodeModel,
+                        prompt: q,
+                        apiKey: opencodeKey || undefined
+                    })
+                });
 
-                    if (res.ok) {
-                        const data = await res.json();
-                        let txt = data.choices?.[0]?.message?.content || '';
-                        txt = txt.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
-
-                        const match = txt.match(/```json\s*([\s\S]*?)\s*```/) || txt.match(/(\{[\s\S]*"nodes"[\s\S]*\})/);
-                        if (match) {
-                            try {
-                                const parsed = JSON.parse(match[1] || match[0]);
-                                applyTopologyToCanvas(parsed);
-                                autoLayoutArchitecture();
-                                quickPrompt.value = '';
-                                submitBtn.innerHTML = '<span>Generar</span>';
-                                showToast(`⚡ Arquitectura generada por OpenCode (${opencodeModel})`, 'success', 3500);
-                                return;
-                            } catch (e) {
-                                console.warn('JSON parse error from OpenCode:', e);
-                            }
-                        }
-                    } else {
-                        const errText = await res.text();
-                        console.warn('OpenCode API error:', res.status, errText);
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data.topology && data.topology.nodes && data.topology.nodes.length > 0) {
+                        applyTopologyToCanvas(data.topology);
+                        autoLayoutArchitecture();
+                        resetZoomAndFitView();
+                        quickPrompt.value = '';
+                        submitBtn.disabled = false;
+                        submitBtn.innerHTML = '<span>Generar</span>';
+                        showToast(`⚡ ¡Arquitectura generada con éxito por ${data.model || 'DeepSeek V4'}!`, 'success', 3500);
+                        return;
                     }
-                } catch (err) {
-                    console.warn('Error en llamada a OpenCode API:', err);
                 }
-                submitBtn.innerHTML = '<span>Generar</span>';
+            } catch (proxyErr) {
+                console.warn('Proxy AI error, attempting fallback:', proxyErr);
             }
 
-            // 2. Gemini Cascade Provider
+            // 2. Gemini Cascade Fallback (if configured)
             if (geminiKey) {
                 try {
-                    submitBtn.textContent = '🔄 Generando...';
-                    const fullPrompt = `${MASTER_MEGA_PROMPT}\n\nREQUERIMIENTO DEL USUARIO:\n${q}\n\nDiseña la arquitectura completa y emite el bloque JSON al final.`;
+                    submitBtn.textContent = '🔄 Probando Gemini...';
+                    const fullPrompt = `${MASTER_MEGA_PROMPT}\n\nREQUERIMIENTO:\n${q}\n\nEmite SIEMPRE el bloque JSON de topología al final.`;
                     
                     const result = await geminiCascadeCall(geminiKey, fullPrompt, (status) => {
                         submitBtn.textContent = status;
@@ -2469,24 +2456,23 @@ ESTRUCTURA DE EVALUACIÓN (6 PILARES):
                                 const parsed = JSON.parse(match[1] || match[0]);
                                 applyTopologyToCanvas(parsed);
                                 autoLayoutArchitecture();
+                                resetZoomAndFitView();
                                 quickPrompt.value = '';
+                                submitBtn.disabled = false;
                                 submitBtn.innerHTML = '<span>Generar</span>';
-                                const status = getCascadeStatus();
-                                showToast(`✅ Arquitectura generada por ${result.modelName} (${status.available}/${status.total} modelos disponibles)`, 'success', 3500);
+                                showToast(`✅ Generado por ${result.modelName}`, 'success', 3500);
                                 return;
                             } catch (e) {}
                         }
-                        // Got text but no valid JSON — still show success with the text
-                        showToast(`${result.modelName} respondió pero sin topología JSON válida. Usando heurística.`, 'warning', 3000);
-                    } else {
-                        const status = getCascadeStatus();
-                        showToast(`⚠️ Todos los ${status.total} modelos Gemini agotados. Usando heurística local.`, 'warning', 3500);
                     }
                 } catch (err) {
-                    console.warn('Error en llamada a IA:', err);
+                    console.warn('Gemini fallback error:', err);
                 }
-                submitBtn.innerHTML = '<span>Generar</span>';
             }
+
+            // 3. Heuristic Preset Fallback
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = '<span>Generar</span>';
 
             // Fallback to Heuristic Match
             const qLower = q.toLowerCase();
