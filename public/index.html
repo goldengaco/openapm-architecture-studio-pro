@@ -792,15 +792,37 @@
                 <div class="modal-body">
                     <!-- AI Provider Selector Tabs -->
                     <div class="modal-tabs" id="ai-provider-tabs">
-                        <button class="modal-tab active" data-ai-provider="gemini">Google AI Studio (Gemini)</button>
+                        <button class="modal-tab active" data-ai-provider="opencode">⚡ OpenCode Go (Ultrarrápido)</button>
+                        <button class="modal-tab" data-ai-provider="gemini">Google AI Studio (Gemini)</button>
                         <button class="modal-tab" data-ai-provider="groq">Groq Cloud (LPU 500+ t/s)</button>
                         <button class="modal-tab" data-ai-provider="openrouter">OpenRouter (:free Models)</button>
                         <button class="modal-tab" data-ai-provider="ollama">Ollama Local ($0 Offline)</button>
                         <button class="modal-tab" data-ai-provider="heuristic">Motor Heurístico ($0)</button>
                     </div>
 
+                    <!-- OpenCode Go Config Box -->
+                    <div class="ai-config-box" id="ai-provider-opencode-box">
+                        <div class="ai-config-header">
+                            <strong>⚡ OpenCode Go API (DeepSeek V4 Flash & MiMo)</strong>
+                            <span class="badge-tag" style="background: linear-gradient(135deg, rgba(16,185,129,0.2), rgba(56,189,248,0.2)); color: var(--accent-emerald);">⚡ ~2.6s Latencia · 7,600+ req/5h</span>
+                        </div>
+                        <div class="ai-input-row">
+                            <input type="password" id="opencode-api-key-input" placeholder="sk-..." style="max-width: 260px;">
+                            <select id="opencode-model-select" style="background: var(--bg-card); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 6px; padding: 0.4rem; font-size: 0.75rem;">
+                                <option value="deepseek-v4-flash" selected>⚡ DeepSeek V4 Flash (2.6s · 7.6k req/5h - Recomendado)</option>
+                                <option value="mimo-v2.5">🚀 MiMo V2.5 (3.3s · 30.1k req/5h - Ultraligero)</option>
+                                <option value="minimax-m3">🧠 MiniMax M3 (13s · 3.2k req/5h - Razonamiento)</option>
+                                <option value="ox-alpha-free">🆓 Ox Alpha Free (Ilimitado ∞)</option>
+                            </select>
+                            <button class="action-btn primary-btn" id="btn-save-opencode-key">Guardar Clave</button>
+                        </div>
+                        <div class="ai-help-links" style="margin-top: 0.5rem;">
+                            <span>Modelos seleccionados por alta velocidad, precisión en formato JSON de arquitectura y cuota masiva.</span>
+                        </div>
+                    </div>
+
                     <!-- Gemini Config Box — CASCADE ENGINE -->
-                    <div class="ai-config-box" id="ai-provider-gemini-box">
+                    <div class="ai-config-box" id="ai-provider-gemini-box" style="display: none;">
                         <div class="ai-config-header">
                             <strong>🔑 Google AI Studio — Motor Cascade (6 Modelos)</strong>
                             <span class="badge-tag">~1,080 RPD Gratis · Auto-Fallback</span>

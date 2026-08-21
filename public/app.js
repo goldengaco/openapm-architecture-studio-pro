@@ -89,7 +89,7 @@ ESTRUCTURA DE EVALUACIÓN (6 PILARES):
 
     let activeEcoFilter = 'all';
     let currentExportTab = 'mermaid';
-    let currentAIProvider = 'gemini'; // 'gemini' | 'groq' | 'openrouter' | 'ollama' | 'heuristic'
+    let currentAIProvider = safeStorage.get('active_ai_provider', 'opencode'); // 'opencode' | 'gemini' | 'groq' | 'openrouter' | 'ollama' | 'heuristic'
     let lastGeneratedAITopology = null;
     let currentTheme = 'default';
 
@@ -2395,23 +2395,80 @@ ESTRUCTURA DE EVALUACIÓN (6 PILARES):
             const q = (quickPrompt.value || '').trim();
             if (!q) return;
 
-            const apiKey = safeStorage.get('gemini_api_key');
-            if (apiKey) {
+            const opencodeKey = safeStorage.get('opencode_api_key');
+            const opencodeModel = safeStorage.get('opencode_model', 'deepseek-v4-flash');
+            const geminiKey = safeStorage.get('gemini_api_key');
+
+            // 1. OpenCode Go Provider (Ultra-Fast ~2.6s Latency)
+            if ((currentAIProvider === 'opencode' && opencodeKey) || (opencodeKey && !geminiKey)) {
+                try {
+                    submitBtn.textContent = '⚡ Generando...';
+                    const promptMsg = `${MASTER_MEGA_PROMPT}\n\nREQUERIMIENTO DEL USUARIO:\n${q}\n\nDiseña la arquitectura completa y emite OBLIGATORIAMENTE al final el bloque JSON con {"nodes": [{"id": "...", "name": "...", "category": "...", "eco": "...", "x": 100, "y": 100}], "connections": [{"from": 0, "to": 1, "label": "HTTPS"}]} dentro de \`\`\`json ... \`\`\`.`;
+                    
+                    const res = await fetch('https://opencode.ai/zen/go/v1/chat/completions', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': 'Bearer ' + opencodeKey
+                        },
+                        body: JSON.stringify({
+                            model: opencodeModel,
+                            messages: [
+                                { role: 'system', content: 'Eres un Principal Cloud Solutions Architect & FinOps Lead. Responde con la explicación técnica concisa y el bloque JSON al final.' },
+                                { role: 'user', content: promptMsg }
+                            ],
+                            temperature: 0.3,
+                            max_tokens: 2500
+                        })
+                    });
+
+                    if (res.ok) {
+                        const data = await res.json();
+                        let txt = data.choices?.[0]?.message?.content || '';
+                        txt = txt.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
+
+                        const match = txt.match(/```json\s*([\s\S]*?)\s*```/) || txt.match(/(\{[\s\S]*"nodes"[\s\S]*\})/);
+                        if (match) {
+                            try {
+                                const parsed = JSON.parse(match[1] || match[0]);
+                                applyTopologyToCanvas(parsed);
+                                autoLayoutArchitecture();
+                                quickPrompt.value = '';
+                                submitBtn.innerHTML = '<span>Generar</span>';
+                                showToast(`⚡ Arquitectura generada por OpenCode (${opencodeModel})`, 'success', 3500);
+                                return;
+                            } catch (e) {
+                                console.warn('JSON parse error from OpenCode:', e);
+                            }
+                        }
+                    } else {
+                        const errText = await res.text();
+                        console.warn('OpenCode API error:', res.status, errText);
+                    }
+                } catch (err) {
+                    console.warn('Error en llamada a OpenCode API:', err);
+                }
+                submitBtn.innerHTML = '<span>Generar</span>';
+            }
+
+            // 2. Gemini Cascade Provider
+            if (geminiKey) {
                 try {
                     submitBtn.textContent = '🔄 Generando...';
                     const fullPrompt = `${MASTER_MEGA_PROMPT}\n\nREQUERIMIENTO DEL USUARIO:\n${q}\n\nDiseña la arquitectura completa y emite el bloque JSON al final.`;
                     
-                    const result = await geminiCascadeCall(apiKey, fullPrompt, (status) => {
+                    const result = await geminiCascadeCall(geminiKey, fullPrompt, (status) => {
                         submitBtn.textContent = status;
                     });
 
                     if (result) {
-                        const txt = result.text;
-                        const match = txt.match(/```json\s*([\s\S]*?)\s*```/);
+                        let txt = result.text.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
+                        const match = txt.match(/```json\s*([\s\S]*?)\s*```/) || txt.match(/(\{[\s\S]*"nodes"[\s\S]*\})/);
                         if (match) {
                             try {
-                                const parsed = JSON.parse(match[1]);
+                                const parsed = JSON.parse(match[1] || match[0]);
                                 applyTopologyToCanvas(parsed);
+                                autoLayoutArchitecture();
                                 quickPrompt.value = '';
                                 submitBtn.innerHTML = '<span>Generar</span>';
                                 const status = getCascadeStatus();
@@ -2482,33 +2539,52 @@ ESTRUCTURA DE EVALUACIÓN (6 PILARES):
             placedCanvasZones = topology.zones || [];
             placedCanvasNotes = topology.notes || [];
             placedCanvasMarkers = topology.markers || [];
-            placedCanvasNodes = (topology.nodes || []).map(n => {
-                const svc = CLOUD_SERVICES.find(s => s.id === n.componentId) || { name: n.componentId, category: 'Service', eco: 'serverless', cost: '$0.00', quota: 'Free Tier', icon: '📦' };
+            
+            placedCanvasNodes = (topology.nodes || []).map((n, idx) => {
+                const targetId = (n.componentId || n.id || '').toLowerCase();
+                const svc = CLOUD_SERVICES.find(s => s.id === targetId || s.id === n.componentId || s.name.toLowerCase() === (n.name || '').toLowerCase()) || {
+                    name: n.name || n.componentId || n.id || `Servicio ${idx + 1}`,
+                    category: n.category || 'Compute',
+                    eco: n.eco || 'serverless',
+                    cost: n.cost || '$0.00',
+                    quota: n.quota || 'Free Tier',
+                    icon: n.icon || '⚡'
+                };
                 return {
                     instanceId: 'node_' + nextInstanceId++,
-                    componentId: n.componentId,
-                    name: svc.name,
-                    category: svc.category,
-                    eco: svc.eco,
-                    icon: svc.icon,
-                    cost: svc.cost,
-                    quota: svc.quota || 'Free Tier',
-                    x: n.x,
-                    y: n.y
+                    componentId: n.componentId || n.id || svc.id || 'custom-svc',
+                    name: n.name || svc.name,
+                    category: n.category || svc.category,
+                    eco: n.eco || svc.eco,
+                    icon: n.icon || svc.icon,
+                    cost: n.cost || svc.cost,
+                    quota: n.quota || svc.quota || 'Free Tier',
+                    x: typeof n.x === 'number' ? n.x : 100 + (idx % 4) * 260,
+                    y: typeof n.y === 'number' ? n.y : 120 + Math.floor(idx / 4) * 160
                 };
             });
 
             activeConnections = [];
             if (topology.connections) {
                 topology.connections.forEach(c => {
-                    const sNode = placedCanvasNodes[c.from];
-                    const tNode = placedCanvasNodes[c.to];
+                    let sNode = null;
+                    let tNode = null;
+                    if (typeof c.from === 'number' && placedCanvasNodes[c.from]) {
+                        sNode = placedCanvasNodes[c.from];
+                    } else {
+                        sNode = placedCanvasNodes.find(nd => nd.instanceId === c.from || nd.componentId === c.from || nd.name?.toLowerCase() === String(c.from).toLowerCase());
+                    }
+                    if (typeof c.to === 'number' && placedCanvasNodes[c.to]) {
+                        tNode = placedCanvasNodes[c.to];
+                    } else {
+                        tNode = placedCanvasNodes.find(nd => nd.instanceId === c.to || nd.componentId === c.to || nd.name?.toLowerCase() === String(c.to).toLowerCase());
+                    }
                     if (sNode && tNode) {
                         activeConnections.push({
                             id: 'conn_' + nextConnId++,
                             fromInstanceId: sNode.instanceId,
                             toInstanceId: tNode.instanceId,
-                            label: c.label || 'HTTPS'
+                            label: c.label || c.protocol || 'HTTPS'
                         });
                     }
                 });
@@ -2535,10 +2611,12 @@ ESTRUCTURA DE EVALUACIÓN (6 PILARES):
     }
 
     // -------------------------------------------------------------
-    // AI COPILOT ENGINE (GEMINI, GROQ, OPENROUTER, OLLAMA & MASTER PROMPT)
+    // AI COPILOT ENGINE (OPENCODE GO, GEMINI, GROQ, OPENROUTER, OLLAMA & MASTER PROMPT)
     // -------------------------------------------------------------
     function setupAICopilot() {
         const aiModal = document.getElementById('ai-modal');
+        const opencodeKeyInput = document.getElementById('opencode-api-key-input');
+        const opencodeModelSelect = document.getElementById('opencode-model-select');
         const geminiKeyInput = document.getElementById('gemini-api-key-input');
         const groqKeyInput = document.getElementById('groq-api-key-input');
         const groqModelSelect = document.getElementById('groq-model-select');
@@ -2547,6 +2625,8 @@ ESTRUCTURA DE EVALUACIÓN (6 PILARES):
         const ollamaEndpointInput = document.getElementById('ollama-endpoint-input');
         const ollamaModelInput = document.getElementById('ollama-model-input');
 
+        if (opencodeKeyInput) opencodeKeyInput.value = safeStorage.get('opencode_api_key', '');
+        if (opencodeModelSelect) opencodeModelSelect.value = safeStorage.get('opencode_model', 'deepseek-v4-flash');
         if (geminiKeyInput) geminiKeyInput.value = safeStorage.get('gemini_api_key', '');
         if (groqKeyInput) groqKeyInput.value = safeStorage.get('groq_api_key', '');
         if (groqModelSelect) groqModelSelect.value = safeStorage.get('groq_model', 'llama-3.3-70b-versatile');
@@ -2554,13 +2634,6 @@ ESTRUCTURA DE EVALUACIÓN (6 PILARES):
         if (openrouterModelSelect) openrouterModelSelect.value = safeStorage.get('openrouter_model', 'google/gemini-2.0-flash-exp:free');
         if (ollamaEndpointInput) ollamaEndpointInput.value = safeStorage.get('ollama_endpoint', 'http://localhost:11434');
         if (ollamaModelInput) ollamaModelInput.value = safeStorage.get('ollama_model', 'llama3.3');
-
-        // ─── AUTO-PRELOAD: Show cascade status on load ───
-        if (!safeStorage.get('gemini_api_key')) {
-            console.log('🔑 No API key found. Paste your Google AI Studio key to enable Cascade Engine.');
-        } else {
-            console.log('🔑 API Key loaded from localStorage. Cascade Engine ready.');
-        }
 
         // Show cascade model status below key input
         const cascadeStatusEl = document.getElementById('gemini-cascade-status');
@@ -2587,12 +2660,15 @@ ESTRUCTURA DE EVALUACIÓN (6 PILARES):
                 document.querySelectorAll('#ai-provider-tabs .modal-tab').forEach(t => t.classList.remove('active'));
                 tab.classList.add('active');
                 currentAIProvider = tab.getAttribute('data-ai-provider');
+                safeStorage.set('active_ai_provider', currentAIProvider);
 
+                const opcBox = document.getElementById('ai-provider-opencode-box');
                 const gBox = document.getElementById('ai-provider-gemini-box');
                 const grqBox = document.getElementById('ai-provider-groq-box');
                 const orBox = document.getElementById('ai-provider-openrouter-box');
                 const oBox = document.getElementById('ai-provider-ollama-box');
 
+                if (opcBox) opcBox.style.display = currentAIProvider === 'opencode' ? 'block' : 'none';
                 if (gBox) gBox.style.display = currentAIProvider === 'gemini' ? 'block' : 'none';
                 if (grqBox) grqBox.style.display = currentAIProvider === 'groq' ? 'block' : 'none';
                 if (orBox) orBox.style.display = currentAIProvider === 'openrouter' ? 'block' : 'none';
@@ -2608,10 +2684,30 @@ ESTRUCTURA DE EVALUACIÓN (6 PILARES):
             aiModal.style.display = 'none';
         });
 
+        const btnSaveOpenCode = document.getElementById('btn-save-opencode-key');
+        if (btnSaveOpenCode) {
+            btnSaveOpenCode.addEventListener('click', () => {
+                const k = opencodeKeyInput.value.trim();
+                const m = opencodeModelSelect.value;
+                if (k) {
+                    safeStorage.set('opencode_api_key', k);
+                    safeStorage.set('opencode_model', m);
+                    safeStorage.set('active_ai_provider', 'opencode');
+                    currentAIProvider = 'opencode';
+                    showToast(`⚡ Clave OpenCode Go guardada (${m} activo · ~2.6s)`, 'success', 3500);
+                } else {
+                    safeStorage.remove('opencode_api_key');
+                    showToast('Clave de OpenCode eliminada.', 'warning', 3000);
+                }
+            });
+        }
+
         document.getElementById('btn-save-gemini-key').addEventListener('click', () => {
             const k = geminiKeyInput.value.trim();
             if (k) {
                 safeStorage.set('gemini_api_key', k);
+                safeStorage.set('active_ai_provider', 'gemini');
+                currentAIProvider = 'gemini';
                 // Reset exhausted models on new key
                 exhaustedModels.clear();
                 const status = getCascadeStatus();
@@ -2632,10 +2728,12 @@ ESTRUCTURA DE EVALUACIÓN (6 PILARES):
                 if (k) {
                     safeStorage.set('groq_api_key', k);
                     safeStorage.set('groq_model', m);
-                    alert('¡Clave de Groq Cloud guardada localmente!');
+                    safeStorage.set('active_ai_provider', 'groq');
+                    currentAIProvider = 'groq';
+                    showToast('¡Clave de Groq Cloud guardada localmente!', 'success', 3000);
                 } else {
                     safeStorage.remove('groq_api_key');
-                    alert('Clave de Groq eliminada.');
+                    showToast('Clave de Groq eliminada.', 'warning', 3000);
                 }
             });
         }
@@ -2648,10 +2746,12 @@ ESTRUCTURA DE EVALUACIÓN (6 PILARES):
                 if (k) {
                     safeStorage.set('openrouter_api_key', k);
                     safeStorage.set('openrouter_model', m);
-                    alert('¡Clave de OpenRouter guardada localmente!');
+                    safeStorage.set('active_ai_provider', 'openrouter');
+                    currentAIProvider = 'openrouter';
+                    showToast('¡Clave de OpenRouter guardada localmente!', 'success', 3000);
                 } else {
                     safeStorage.remove('openrouter_api_key');
-                    alert('Clave de OpenRouter eliminada.');
+                    showToast('Clave de OpenRouter eliminada.', 'warning', 3000);
                 }
             });
         }
@@ -2661,7 +2761,9 @@ ESTRUCTURA DE EVALUACIÓN (6 PILARES):
             btnSaveOllama.addEventListener('click', () => {
                 safeStorage.set('ollama_endpoint', ollamaEndpointInput.value.trim());
                 safeStorage.set('ollama_model', ollamaModelInput.value.trim());
-                alert('¡Configuración de Ollama Local guardada!');
+                safeStorage.set('active_ai_provider', 'ollama');
+                currentAIProvider = 'ollama';
+                showToast('¡Configuración de Ollama Local guardada!', 'success', 3000);
             });
         }
 
@@ -2678,6 +2780,7 @@ ESTRUCTURA DE EVALUACIÓN (6 PILARES):
             btnApplyTopology.addEventListener('click', () => {
                 if (lastGeneratedAITopology) {
                     applyTopologyToCanvas(lastGeneratedAITopology);
+                    autoLayoutArchitecture();
                     aiModal.style.display = 'none';
                 }
             });
@@ -2695,6 +2798,8 @@ ESTRUCTURA DE EVALUACIÓN (6 PILARES):
         if (btnApply) btnApply.style.display = 'none';
         outContent.textContent = 'Analizando arquitectura con el Master Framework 2026...';
 
+        const opencodeKey = safeStorage.get('opencode_api_key');
+        const opencodeModel = safeStorage.get('opencode_model', 'deepseek-v4-flash');
         const geminiKey = safeStorage.get('gemini_api_key');
         const groqKey = safeStorage.get('groq_api_key');
         const groqModel = safeStorage.get('groq_model', 'llama-3.3-70b-versatile');
@@ -2718,7 +2823,49 @@ ESTRUCTURA DE EVALUACIÓN (6 PILARES):
             ? `${MASTER_MEGA_PROMPT}\n\nAUDITA ESTA ARQUITECTURA ACTUAL:\n${JSON.stringify(architectureSummary, null, 2)}\n\nIdentifica: 1) SPOFs críticos, 2) Blast Radius, 3) Cuellos de botella, 4) Resiliencia On-Premise/Cloud y 5) Recomendaciones técnicas.`
             : `${MASTER_MEGA_PROMPT}\n\nANALIZA LOS COSTOS, FINOPS Y ON-PREMISE VIABILITY DE ESTA ARQUITECTURA:\n${JSON.stringify(architectureSummary, null, 2)}\n\nCalcula: 1) Unit Economics ($/MAU), 2) Alternativas Zero-Cost ($0.00) y On-Premise (MinIO, Traefik, PostgreSQL, Qdrant, Ollama), 3) TCO de Hardware propio vs Cloud y 4) Ahorro mensual proyectado.`;
 
-        // 1. Google Gemini Provider — CASCADE ENGINE (8 models, auto-fallback)
+        // 1. OpenCode Go Provider (Ultra-Fast ~2.6s)
+        if (currentAIProvider === 'opencode' && opencodeKey) {
+            modelTag.textContent = `OpenCode Go: ${opencodeModel} (Ultra-Fast)`;
+            try {
+                const res = await fetch('https://opencode.ai/zen/go/v1/chat/completions', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${opencodeKey}`
+                    },
+                    body: JSON.stringify({
+                        model: opencodeModel,
+                        messages: [
+                            { role: 'system', content: 'Eres un Principal Cloud & FinOps Lead Architect.' },
+                            { role: 'user', content: promptText }
+                        ],
+                        temperature: 0.3,
+                        max_tokens: 3000
+                    })
+                });
+
+                if (res.ok) {
+                    const json = await res.json();
+                    let text = json.choices?.[0]?.message?.content || '';
+                    text = text.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
+                    outTitle.textContent = type === 'audit' ? `🛡️ Auditoría de Resiliencia (${opencodeModel})` : `💡 Optimización FinOps & Zero-Cost (${opencodeModel})`;
+                    outContent.textContent = text;
+
+                    const match = text.match(/```json\s*([\s\S]*?)\s*```/) || text.match(/(\{[\s\S]*"nodes"[\s\S]*\})/);
+                    if (match) {
+                        try {
+                            lastGeneratedAITopology = JSON.parse(match[1] || match[0]);
+                            if (btnApply) btnApply.style.display = 'inline-flex';
+                        } catch (e) {}
+                    }
+                    return;
+                }
+            } catch (err) {
+                console.warn('Error con OpenCode API:', err);
+            }
+        }
+
+        // 2. Google Gemini Provider — CASCADE ENGINE (6 models, auto-fallback)
         if (currentAIProvider === 'gemini' && geminiKey) {
             modelTag.textContent = '🔄 Gemini Cascade — Seleccionando modelo...';
             
