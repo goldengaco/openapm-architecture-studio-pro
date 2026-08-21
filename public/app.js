@@ -93,6 +93,106 @@ ESTRUCTURA DE EVALUACIÓN (6 PILARES):
     let lastGeneratedAITopology = null;
     let currentTheme = 'default';
 
+    // ─── GEMINI MULTI-MODEL CASCADE ENGINE (Free Tier Maximizer) ───
+    // Ordered by capability: most powerful first → lite models as high-volume fallback
+    const GEMINI_MODEL_CASCADE = [
+        { id: 'gemini-3.6-flash',      name: 'Gemini 3.6 Flash',      tier: 'pro',  rpdLimit: 20,  rpmLimit: 5  },
+        { id: 'gemini-3.5-flash',      name: 'Gemini 3.5 Flash',      tier: 'pro',  rpdLimit: 20,  rpmLimit: 5  },
+        { id: 'gemini-3-flash-preview', name: 'Gemini 3 Flash',       tier: 'pro',  rpdLimit: 20,  rpmLimit: 5  },
+        { id: 'gemini-3.7-flash',      name: 'Gemini 3.7 Flash',      tier: 'pro',  rpdLimit: 20,  rpmLimit: 5  },
+        { id: 'gemini-3.5-flash-lite', name: 'Gemini 3.5 Flash Lite', tier: 'lite', rpdLimit: 500, rpmLimit: 15 },
+        { id: 'gemini-3.1-flash-lite', name: 'Gemini 3.1 Flash Lite', tier: 'lite', rpdLimit: 500, rpmLimit: 15 },
+    ];
+
+    // Track exhausted models per session (reset on page reload)
+    const exhaustedModels = new Set();
+    let lastUsedModelIndex = 0;
+
+    /**
+     * Gemini Cascade: Try models in order, skip exhausted ones.
+     * On 429 (rate limit), marks model as exhausted and tries next.
+     * Returns { text, modelName } on success, null on total failure.
+     */
+    async function geminiCascadeCall(apiKey, promptText, statusCallback) {
+        for (let i = 0; i < GEMINI_MODEL_CASCADE.length; i++) {
+            const model = GEMINI_MODEL_CASCADE[i];
+            if (exhaustedModels.has(model.id)) continue;
+
+            if (statusCallback) statusCallback(`🔄 Intentando ${model.name}...`);
+
+            try {
+                const res = await fetch(
+                    `https://generativelanguage.googleapis.com/v1beta/models/${model.id}:generateContent?key=${apiKey}`,
+                    {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            contents: [{ parts: [{ text: promptText }] }],
+                            generationConfig: { temperature: 0.7, maxOutputTokens: 8192 }
+                        })
+                    }
+                );
+
+                if (res.status === 429) {
+                    // Rate limited → mark exhausted and try next model
+                    exhaustedModels.add(model.id);
+                    console.warn(`⚠️ ${model.name} rate limited (429). Trying next model...`);
+                    if (statusCallback) statusCallback(`⚠️ ${model.name} agotado, probando siguiente...`);
+                    continue;
+                }
+
+                if (res.status === 404) {
+                    // Model not available → skip permanently
+                    exhaustedModels.add(model.id);
+                    console.warn(`⚠️ ${model.name} not found (404). Skipping...`);
+                    continue;
+                }
+
+                if (!res.ok) {
+                    const errBody = await res.json().catch(() => ({}));
+                    console.warn(`⚠️ ${model.name} error ${res.status}:`, errBody);
+                    // On server errors, try next model
+                    if (res.status >= 500) continue;
+                    // On other client errors (400, 403), try next model too
+                    continue;
+                }
+
+                const json = await res.json();
+                if (json.candidates && json.candidates[0]?.content?.parts?.[0]?.text) {
+                    lastUsedModelIndex = i;
+                    const modelName = model.name;
+                    const text = json.candidates[0].content.parts[0].text;
+                    console.log(`✅ ${modelName} responded successfully`);
+                    return { text, modelName, modelId: model.id, tier: model.tier };
+                }
+
+                // Empty response → try next
+                console.warn(`⚠️ ${model.name} returned empty response. Trying next...`);
+            } catch (err) {
+                console.warn(`⚠️ ${model.name} network error:`, err);
+                // Network error → try next model
+            }
+        }
+
+        // All models exhausted
+        return null;
+    }
+
+    /**
+     * Get cascade status summary for display
+     */
+    function getCascadeStatus() {
+        const available = GEMINI_MODEL_CASCADE.filter(m => !exhaustedModels.has(m.id));
+        const totalRPD = available.reduce((s, m) => s + m.rpdLimit, 0);
+        return {
+            available: available.length,
+            total: GEMINI_MODEL_CASCADE.length,
+            exhausted: exhaustedModels.size,
+            totalRPD,
+            models: available.map(m => m.name)
+        };
+    }
+
     // Undo / Redo Stack State
     let historyStack = [];
     let redoStack = [];
@@ -1435,7 +1535,7 @@ ESTRUCTURA DE EVALUACIÓN (6 PILARES):
             if (z.y + z.height > maxY) maxY = z.y + z.height;
         });
 
-        const dropzone = document.getElementById('canvas-dropzone');
+        const dropzone = document.getElementById('diagram-dropzone');
         const cw = dropzone ? dropzone.clientWidth : 1200;
         const ch = dropzone ? dropzone.clientHeight : 800;
 
@@ -2298,17 +2398,15 @@ ESTRUCTURA DE EVALUACIÓN (6 PILARES):
             const apiKey = safeStorage.get('gemini_api_key');
             if (apiKey) {
                 try {
-                    submitBtn.textContent = 'Generando...';
-                    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            contents: [{ parts: [{ text: `${MASTER_MEGA_PROMPT}\n\nREQUERIMIENTO DEL USUARIO:\n${q}\n\nDiseña la arquitectura completa y emite el bloque JSON al final.` }] }]
-                        })
+                    submitBtn.textContent = '🔄 Generando...';
+                    const fullPrompt = `${MASTER_MEGA_PROMPT}\n\nREQUERIMIENTO DEL USUARIO:\n${q}\n\nDiseña la arquitectura completa y emite el bloque JSON al final.`;
+                    
+                    const result = await geminiCascadeCall(apiKey, fullPrompt, (status) => {
+                        submitBtn.textContent = status;
                     });
-                    const json = await res.json();
-                    if (json.candidates && json.candidates[0].content.parts[0].text) {
-                        const txt = json.candidates[0].content.parts[0].text;
+
+                    if (result) {
+                        const txt = result.text;
                         const match = txt.match(/```json\s*([\s\S]*?)\s*```/);
                         if (match) {
                             try {
@@ -2316,10 +2414,16 @@ ESTRUCTURA DE EVALUACIÓN (6 PILARES):
                                 applyTopologyToCanvas(parsed);
                                 quickPrompt.value = '';
                                 submitBtn.innerHTML = '<span>Generar</span>';
-                                showToast('Arquitectura generada por Gemini', 'success', 2500);
+                                const status = getCascadeStatus();
+                                showToast(`✅ Arquitectura generada por ${result.modelName} (${status.available}/${status.total} modelos disponibles)`, 'success', 3500);
                                 return;
                             } catch (e) {}
                         }
+                        // Got text but no valid JSON — still show success with the text
+                        showToast(`${result.modelName} respondió pero sin topología JSON válida. Usando heurística.`, 'warning', 3000);
+                    } else {
+                        const status = getCascadeStatus();
+                        showToast(`⚠️ Todos los ${status.total} modelos Gemini agotados. Usando heurística local.`, 'warning', 3500);
                     }
                 } catch (err) {
                     console.warn('Error en llamada a IA:', err);
@@ -2451,6 +2555,20 @@ ESTRUCTURA DE EVALUACIÓN (6 PILARES):
         if (ollamaEndpointInput) ollamaEndpointInput.value = safeStorage.get('ollama_endpoint', 'http://localhost:11434');
         if (ollamaModelInput) ollamaModelInput.value = safeStorage.get('ollama_model', 'llama3.3');
 
+        // ─── AUTO-PRELOAD: Show cascade status on load ───
+        if (!safeStorage.get('gemini_api_key')) {
+            console.log('🔑 No API key found. Paste your Google AI Studio key to enable Cascade Engine.');
+        } else {
+            console.log('🔑 API Key loaded from localStorage. Cascade Engine ready.');
+        }
+
+        // Show cascade model status below key input
+        const cascadeStatusEl = document.getElementById('gemini-cascade-status');
+        if (cascadeStatusEl) {
+            const status = getCascadeStatus();
+            cascadeStatusEl.innerHTML = `<span style="color: var(--accent-emerald);">✅ ${status.available} modelos disponibles</span> · ~${status.totalRPD} req/día gratis`;
+        }
+
         // Display Master Mega-Prompt in box
         const promptDisplay = document.getElementById('mega-prompt-text-display');
         if (promptDisplay) promptDisplay.textContent = MASTER_MEGA_PROMPT;
@@ -2494,10 +2612,15 @@ ESTRUCTURA DE EVALUACIÓN (6 PILARES):
             const k = geminiKeyInput.value.trim();
             if (k) {
                 safeStorage.set('gemini_api_key', k);
-                alert('¡Clave de Google AI Studio guardada localmente!');
+                // Reset exhausted models on new key
+                exhaustedModels.clear();
+                const status = getCascadeStatus();
+                const cascadeEl = document.getElementById('gemini-cascade-status');
+                if (cascadeEl) cascadeEl.innerHTML = `<span style="color: var(--accent-emerald);">✅ ${status.available} modelos disponibles</span> · ~${status.totalRPD} req/día gratis`;
+                showToast(`🔑 Clave guardada. Cascade Engine: ${status.available} modelos Gemini listos (~${status.totalRPD} req/día)`, 'success', 3500);
             } else {
                 safeStorage.remove('gemini_api_key');
-                alert('Clave eliminada. Se usará Modo Heurístico $0 Offline.');
+                showToast('Clave eliminada. Se usará Motor Heurístico $0 Offline.', 'warning', 3000);
             }
         });
 
@@ -2595,32 +2718,36 @@ ESTRUCTURA DE EVALUACIÓN (6 PILARES):
             ? `${MASTER_MEGA_PROMPT}\n\nAUDITA ESTA ARQUITECTURA ACTUAL:\n${JSON.stringify(architectureSummary, null, 2)}\n\nIdentifica: 1) SPOFs críticos, 2) Blast Radius, 3) Cuellos de botella, 4) Resiliencia On-Premise/Cloud y 5) Recomendaciones técnicas.`
             : `${MASTER_MEGA_PROMPT}\n\nANALIZA LOS COSTOS, FINOPS Y ON-PREMISE VIABILITY DE ESTA ARQUITECTURA:\n${JSON.stringify(architectureSummary, null, 2)}\n\nCalcula: 1) Unit Economics ($/MAU), 2) Alternativas Zero-Cost ($0.00) y On-Premise (MinIO, Traefik, PostgreSQL, Qdrant, Ollama), 3) TCO de Hardware propio vs Cloud y 4) Ahorro mensual proyectado.`;
 
-        // 1. Google Gemini Provider
+        // 1. Google Gemini Provider — CASCADE ENGINE (8 models, auto-fallback)
         if (currentAIProvider === 'gemini' && geminiKey) {
-            modelTag.textContent = 'Gemini 2.0 / 1.5 Flash (Google AI Studio)';
-            try {
-                const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiKey}`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ contents: [{ parts: [{ text: promptText }] }] })
-                });
-                const json = await res.json();
-                if (json.candidates && json.candidates[0].content.parts[0].text) {
-                    const text = json.candidates[0].content.parts[0].text;
-                    outTitle.textContent = type === 'audit' ? '🛡️ Auditoría de Resiliencia & SPOF (Gemini)' : '💡 Optimización FinOps, Zero-Cost & On-Premise (Gemini)';
-                    outContent.textContent = text;
+            modelTag.textContent = '🔄 Gemini Cascade — Seleccionando modelo...';
+            
+            const result = await geminiCascadeCall(geminiKey, promptText, (status) => {
+                outContent.textContent = status;
+                modelTag.textContent = status;
+            });
 
-                    const match = text.match(/```json\s*([\s\S]*?)\s*```/);
-                    if (match) {
-                        try {
-                            lastGeneratedAITopology = JSON.parse(match[1]);
-                            if (btnApply) btnApply.style.display = 'inline-flex';
-                        } catch (e) {}
-                    }
-                    return;
+            if (result) {
+                const status = getCascadeStatus();
+                modelTag.textContent = `✅ ${result.modelName} (${status.available}/${status.total} modelos libres)`;
+                outTitle.textContent = type === 'audit' 
+                    ? `🛡️ Auditoría de Resiliencia & SPOF (${result.modelName})` 
+                    : `💡 Optimización FinOps, Zero-Cost & On-Premise (${result.modelName})`;
+                outContent.textContent = result.text;
+
+                const match = result.text.match(/```json\s*([\s\S]*?)\s*```/);
+                if (match) {
+                    try {
+                        lastGeneratedAITopology = JSON.parse(match[1]);
+                        if (btnApply) btnApply.style.display = 'inline-flex';
+                    } catch (e) {}
                 }
-            } catch (err) {
-                console.warn('Error con Gemini API:', err);
+                return;
+            } else {
+                // All Gemini models exhausted — fall through to other providers or heuristic
+                const status = getCascadeStatus();
+                console.warn(`⚠️ All ${status.total} Gemini models exhausted. Falling back...`);
+                outContent.textContent = `⚠️ Todos los ${status.total} modelos Gemini agotados. Intentando otros proveedores...`;
             }
         }
 
